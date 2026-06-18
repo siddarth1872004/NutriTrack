@@ -195,7 +195,7 @@ function persistLog() {
 /* ─── Apply theme ──────────────────────────────────── */
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', theme);
-  const btn = g('themeBtn'); if(btn) btn.textContent = theme==='dark' ? '☀' : '🌙';
+  const btn = g('themeBtn'); if(btn) btn.textContent = theme==='dark' ? '' : '';
 }
 applyTheme();
 g('themeBtn')?.addEventListener('click', () => {
@@ -208,7 +208,7 @@ g('themeBtn')?.addEventListener('click', () => {
 setText('dateBadge', new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}));
 (function updateStreakBadge() {
   const el = g('streakBadge'); if(!el) return;
-  if (streakData.count >= 3) { el.textContent=`🔥 ${streakData.count}d`; el.style.display='inline-flex'; }
+  if (streakData.count >= 3) { el.textContent=` ${streakData.count}d`; el.style.display='inline-flex'; }
   else el.style.display='none';
 })();
 
@@ -274,7 +274,7 @@ function renderSuggestions(keys) {
       return `<div class="sug-item${isC?' sug-custom':''}${isR?' sug-recent':''}" data-key="${k}">
         <div class="sug-main"><span class="sug-name">${hlMatch(f.name,q)}${isC?'<span class="custom-badge">custom</span>':''}</span>
         <span class="sug-meta">${escHtml(f.category||'')} · ${escHtml(f.servingLabel)}</span></div>
-        <div class="sug-right">${isS?'<span class="sug-pin">📌</span>':''}${isR?'<span class="sug-clock">⏱</span>':''}
+        <div class="sug-right">${isS?'<span class="sug-pin"></span>':''}${isR?'<span class="sug-clock">⏱</span>':''}
         <span class="sug-cal">${f.cal} kcal/${f.base}${f.unit}</span></div></div>`;
     }).join('');
   }
@@ -309,10 +309,10 @@ function addToRecents(key,portionLabel,cal) {
 
 // Search filter pills
 const FILTER_PILLS=[
-  {l:'🌾 Grains',q:'Grains'},{l:'🥩 Meat',q:'Meat'},{l:'🐟 Seafood',q:'Seafood'},
-  {l:'🥦 Veg',q:'Vegetables'},{l:'🥛 Dairy',q:'Eggs & Dairy'},{l:'🍛 Indian',q:'Indian'},
-  {l:'🫘 Dal',q:'Dal'},{l:'🍕 Fast Food',q:'Fast Food'},{l:'🥤 Drinks',q:'Beverages'},
-  {l:'🍰 Sweets',q:'Sweets'},{l:'🥜 Nuts',q:'Nuts'},{l:'🍳 Breakfast',q:'Breakfast'},
+  {l:' Grains',q:'Grains'},{l:' Meat',q:'Meat'},{l:' Seafood',q:'Seafood'},
+  {l:' Veg',q:'Vegetables'},{l:' Dairy',q:'Eggs & Dairy'},{l:' Indian',q:'Indian'},
+  {l:' Dal',q:'Dal'},{l:' Fast Food',q:'Fast Food'},{l:' Drinks',q:'Beverages'},
+  {l:' Sweets',q:'Sweets'},{l:' Nuts',q:'Nuts'},{l:' Breakfast',q:'Breakfast'},
 ];
 (function(){
   const w=g('searchFilterPills'); if(!w) return;
@@ -640,7 +640,7 @@ function renderLog() {
   updateMobLogBadge?.();
   const filtered=logFilter?logEntries.filter(e=>e.name.toLowerCase().includes(logFilter)||e.meal?.toLowerCase().includes(logFilter)):logEntries;
   if(!filtered.length&&!logEntries.length){
-    logEntEl.innerHTML=`<div class="log-empty"><div class="log-empty-icon">🍽</div><div class="log-empty-title">Nothing logged yet</div><div class="log-empty-sub">Press <kbd>/</kbd> or <kbd>Ctrl+K</kbd> to search</div></div>`;return;
+    logEntEl.innerHTML=`<div class="log-empty"><div class="log-empty-icon"></div><div class="log-empty-title">Nothing logged yet</div><div class="log-empty-sub">Press <kbd>/</kbd> or <kbd>Ctrl+K</kbd> to search</div></div>`;return;
   }
   if(!filtered.length){logEntEl.innerHTML=`<div class="log-empty"><div class="log-empty-title">No entries match "${escHtml(logFilter)}"</div></div>`;return;}
 
@@ -680,12 +680,12 @@ function renderLog() {
             <div class="entry-head">
               <div class="entry-info">
                 <div class="entry-name">${escHtml(e.name)}${e.custom?'<span class="custom-badge">custom</span>':''}</div>
-                <div class="entry-meta">${escHtml(e.portion)} · ${e.time}${e.note?`<span class="entry-note" data-action="edit-entry-note" data-entry-id="${e.id}"> 📝 ${escHtml(e.note)}</span>`:''}</div>
+                <div class="entry-meta">${escHtml(e.portion)} · ${e.time}${e.note?`<span class="entry-note" data-action="edit-entry-note" data-entry-id="${e.id}">  ${escHtml(e.note)}</span>`:''}</div>
               </div>
               <div class="entry-actions">
                 <button class="ea-btn" data-action="duplicate-entry" data-entry-id="${e.id}" title="Log again">⎘</button>
-                <button class="ea-btn" data-action="edit-entry-portion" data-entry-id="${e.id}" title="Edit portion">✏</button>
-                <button class="ea-btn" data-action="edit-entry-note" data-entry-id="${e.id}" title="Note">📝</button>
+                <button class="ea-btn" data-action="edit-entry-portion" data-entry-id="${e.id}" title="Edit portion"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="ea-btn" data-action="edit-entry-note" data-entry-id="${e.id}" title="Note"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
                 <select class="entry-meal-sel" onchange="changeMealForEntry(${e.id},this.value)" title="Move to meal">
                   ${mealGroups.map(m=>`<option value="${escAttr(m)}"${m===e.meal?' selected':''}>${escHtml(m)}</option>`).join('')}
                 </select>
@@ -812,14 +812,14 @@ function updateMotivationalMsg() {
   const el=g('motivationMsg'); if(!el) return;
   const pct=goals.cal>0?(dailyTotals.cal/goals.cal)*100:0,n=logEntries.length;
   let msg='';
-  if(!n) msg='👋 Log your first meal!';
-  else if(pct<25) msg='🌅 Good start — keep logging!';
-  else if(pct<50) msg='💪 Quarter way there.';
-  else if(pct<75) msg='🔥 More than halfway!';
-  else if(pct<95) msg='✅ Almost at goal!';
-  else if(pct<110) msg='🎯 Goal reached!';
-  else msg='😅 Over goal today.';
-  if(streakData.count>=7) msg+=` 🔥${streakData.count}d streak!`;
+  if(!n) msg=' Log your first meal!';
+  else if(pct<25) msg=' Good start — keep logging!';
+  else if(pct<50) msg=' Quarter way there.';
+  else if(pct<75) msg=' More than halfway!';
+  else if(pct<95) msg=' Almost at goal!';
+  else if(pct<110) msg=' Goal reached!';
+  else msg=' Over goal today.';
+  if(streakData.count>=7) msg+=` ${streakData.count}d streak!`;
   el.textContent=msg;
 }
 
@@ -847,7 +847,7 @@ function updateWaterUI() {
   const filled = Math.floor(waterMl / 250);
   const glasses = g('waterGlasses');
   if (glasses) glasses.innerHTML = Array.from({length:10}, (_,i) =>
-    `<button class="water-glass${i < filled ? ' full' : ''}" data-action="add-water-glass" data-water-index="${i}" data-water-filled="${filled}" title="${i < filled ? 'Remove 250ml' : 'Add 250ml'}">💧</button>`
+    `<button class="water-glass${i < filled ? ' full' : ''}" data-action="add-water-glass" data-water-index="${i}" data-water-filled="${filled}" title="${i < filled ? 'Remove 250ml' : 'Add 250ml'}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></button>`
   ).join('');
 
   const undoBtn = g('waterUndoBtn');
@@ -892,7 +892,7 @@ function addWater(ml, { trackUndo = true } = {}){
   updateWaterUI();
 
   if (applied > 0 && waterMl >= waterGoal && prev < waterGoal) {
-    showToast('💧 Water goal reached! 🎉');
+    showToast(' Water goal reached! ');
   } else {
     const sign = applied > 0 ? '+' : '';
     showToast(`${sign}${applied}ml · ${(waterMl/1000).toFixed(1)}L today`);
@@ -1017,8 +1017,8 @@ function renderHistoryDrawer() {
         <div class="hist-right">
           <div class="hist-bar-mini"><div style="width:${pct}%;background:var(--cal)"></div></div>
           <div class="hist-day-actions">
-            <button class="hist-action-btn" data-action="load-history-day" data-date="${dateStr}" title="Load this day into today's log">📋 Load</button>
-            <button class="hist-action-btn hist-del-btn" data-action="delete-history-day" data-date="${dateStr}" title="Delete this day">🗑</button>
+            <button class="hist-action-btn" data-action="load-history-day" data-date="${dateStr}" title="Load this day into today's log"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>Load</button>
+            <button class="hist-action-btn hist-del-btn" data-action="delete-history-day" data-date="${dateStr}" title="Delete this day"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
           </div>
         </div>
       </div>
@@ -1187,7 +1187,7 @@ function openAddFoodModal(prefill='',editKey=null) {
   }
   modal.dataset.editKey=editKey||'';
   const saveBtn=g('saveCustomFoodBtn'); if(saveBtn) saveBtn.textContent=isEdit?'Update Food':'Save Food';
-  const titleEl=modal.querySelector('.modal-header h2'); if(titleEl) titleEl.textContent=isEdit?'✏ Edit Custom Food':'🧪 Add Custom Food';
+  const titleEl=modal.querySelector('.modal-header h2'); if(titleEl) titleEl.textContent=isEdit?' Edit Custom Food':' Add Custom Food';
   updateCalPreview(); modal.classList.add('open');
   setTimeout(()=>g('afName')?.focus(),80);
 }
@@ -1269,10 +1269,10 @@ function renderMemoryDrawer() {
   const pass=k=>{const f=db[k];if(!f)return false;if(memoryCatFilter!=='All'&&f.category!==memoryCatFilter)return false;if(memoryFilter&&!f.name.toLowerCase().includes(memoryFilter)&&!(f.category||'').toLowerCase().includes(memoryFilter)&&!k.includes(memoryFilter))return false;return true;};
   const saved=savedFoods.filter(pass),custom=Object.keys(USER_DB).filter(pass),all=Object.keys(db).filter(pass);
   let html='';
-  if(saved.length){html+=`<div class="drawer-section-title">📌 Saved (${saved.length})</div>`;html+=saved.map(k=>memCard(k,true)).join('');html+=`<hr class="drawer-divider">`;}
-  if(custom.length){html+=`<div class="drawer-section-title">🧪 My Custom Foods (${custom.length})</div>`;html+=custom.map(k=>memCard(k,savedFoods.includes(k))).join('');html+=`<hr class="drawer-divider">`;}
+  if(saved.length){html+=`<div class="drawer-section-title"> Saved (${saved.length})</div>`;html+=saved.map(k=>memCard(k,true)).join('');html+=`<hr class="drawer-divider">`;}
+  if(custom.length){html+=`<div class="drawer-section-title"> My Custom Foods (${custom.length})</div>`;html+=custom.map(k=>memCard(k,savedFoods.includes(k))).join('');html+=`<hr class="drawer-divider">`;}
   const show=all.slice(0,100);
-  html+=`<div class="drawer-section-title">📚 All Foods (${all.length.toLocaleString()})</div>`;
+  html+=`<div class="drawer-section-title"> All Foods (${all.length.toLocaleString()})</div>`;
   if(!show.length){html+=`<div class="log-empty" style="padding:16px 0">No foods match.</div>`;}
   else{html+=show.map(k=>memCard(k,savedFoods.includes(k))).join('');if(all.length>100)html+=`<div class="sug-more">Showing 100 of ${all.length.toLocaleString()} — type to filter</div>`;}
   const ml=g('memoryList'); if(ml) ml.innerHTML=html;
@@ -1285,8 +1285,8 @@ function memCard(key,isSaved){
       <div class="mem-cat">${escHtml(f.category||'')}${f.countable?' · by '+f.countable.unitName:''}</div></div>
       <div class="mem-actions">
         <button class="mem-use-btn" data-action="use-from-memory" data-key="${key}">Use →</button>
-        ${isSaved?`<button class="mem-pin-btn active" data-action="remove-from-memory" data-key="${key}" title="Unsave">📌</button>`:`<button class="mem-pin-btn" data-action="add-to-memory" data-key="${key}" title="Save">📌</button>`}
-        ${isC?`<button class="mem-edit-btn" data-action="edit-custom-food" data-key="${key}" title="Edit">✏</button><button class="mem-del-btn" data-action="delete-custom-food" data-key="${key}" title="Delete">🗑</button>`:''}
+        ${isSaved?`<button class="mem-pin-btn active" data-action="remove-from-memory" data-key="${key}" title="Unsave"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>`:`<button class="mem-pin-btn" data-action="add-to-memory" data-key="${key}" title="Save"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>`}
+        ${isC?`<button class="mem-edit-btn" data-action="edit-custom-food" data-key="${key}" title="Edit"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="mem-del-btn" data-action="delete-custom-food" data-key="${key}" title="Delete"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>`:''}
       </div>
     </div>
     <div class="mem-table">
@@ -1330,7 +1330,7 @@ function closeTemplatesDrawer(){g('templatesDrawer')?.classList.remove('open');g
 function renderTemplatesPanel(){
   const panel=g('templatesPanel');if(!panel)return;
   const keys=Object.keys(mealTemplates);
-  if(!keys.length){panel.innerHTML=`<div class="tmpl-empty">No templates yet.<br>Log a full day then click 💾 to save it.</div>`;return;}
+  if(!keys.length){panel.innerHTML=`<div class="tmpl-empty">No templates yet.<br>Log a full day then click <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; display: inline-block;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> to save it.</div>`;return;}
   panel.innerHTML=keys.map(name=>{const e=mealTemplates[name];const cal=e.reduce((s,x)=>s+x.cal,0);return`<div class="tmpl-item"><div class="tmpl-info"><div class="tmpl-name">${escHtml(name)}</div><div class="tmpl-meta">${e.length} items · ${cal} kcal</div></div><div class="tmpl-actions"><button class="tmpl-load-btn" data-action="load-template" data-name="${escAttr(name)}">Load</button><button class="tmpl-del-btn" data-action="delete-template" data-name="${escAttr(name)}">✕</button></div></div>`;}).join('');
 }
 function loadTemplate(name){

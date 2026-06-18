@@ -6,14 +6,14 @@ NutriTrack is a fully client-side, Free and Open Source Software (FOSS) calorie 
 
 ## Key Features
 
-- **📊 Comprehensive Daily Tracking**: Log daily intake (Calories, Proteins, Carbs, Fats) and water consumption.
-- **🧠 NutriMemory Search Engine**: Fast, token-based local food search featuring subsequence matching and score boosting for recently logged or pinned foods.
-- **⚡ MET Activity Calorie Calculator**: Log exercises and estimate calories burned using MET value estimates directly from clinical activity ratios.
-- **🎯 Custom Intake Goals**: Set personalized targets for macronutrients (protein, carbs, fat), general calories, and water intake.
-- **📋 Meal Templates & Custom Foods**: Create reusable food entries and save composite meal layouts for quick log convenience.
-- **⚖ Weight Logging & Tracking**: Maintain historical tracking of body weight goals.
+- ** Comprehensive Daily Tracking**: Log daily intake (Calories, Proteins, Carbs, Fats) and water consumption.
+- ** NutriMemory Search Engine**: Fast, token-based local food search featuring subsequence matching and score boosting for recently logged or pinned foods.
+- ** MET Activity Calorie Calculator**: Log exercises and estimate calories burned using MET value estimates directly from clinical activity ratios.
+- ** Custom Intake Goals**: Set personalized targets for macronutrients (protein, carbs, fat), general calories, and water intake.
+- ** Meal Templates & Custom Foods**: Create reusable food entries and save composite meal layouts for quick log convenience.
+- ** Weight Logging & Tracking**: Maintain historical tracking of body weight goals.
 - **⌨ Keyboard-Driven UX**: Full shortcuts support for hands-on-keyboard logging (e.g. `/` for search, `Ctrl+Z` to undo, `M` for NutriMemory).
-- **💾 JSON Data Export & Import**: Backup or move your data with local file operations (zero server dependency).
+- ** JSON Data Export & Import**: Backup or move your data with local file operations (zero server dependency).
 
 ---
 

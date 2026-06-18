@@ -16,7 +16,7 @@
 const FOOD_DB = {
 
   /* ══════════════════════════════════════════════════════
-     🍚  GRAINS, RICE & CEREALS — COMPLETE SECTION
+       GRAINS, RICE & CEREALS — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── White & Polished Rice ─────────────────────────── */
@@ -190,7 +190,7 @@ const FOOD_DB = {
 
   
 /* ══════════════════════════════════════════════════════
-     🫓  BREADS & BAKED GOODS — COMPLETE SECTION
+       BREADS & BAKED GOODS — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Western Breads ────────────────────────────────── */
@@ -363,7 +363,7 @@ const FOOD_DB = {
 
 
 /* ══════════════════════════════════════════════════════
-     🥞  INDIAN BREAKFAST — COMPLETE SECTION
+       INDIAN BREAKFAST — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Idli Varieties ────────────────────────────────── */
@@ -553,7 +553,7 @@ const FOOD_DB = {
 
 
 /* ══════════════════════════════════════════════════════
-     🍛  INDIAN CURRIES & DALS — COMPLETE SECTION
+       INDIAN CURRIES & DALS — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Toor / Arhar Dal ──────────────────────────────── */
@@ -764,7 +764,7 @@ const FOOD_DB = {
 
 
  /* ══════════════════════════════════════════════════════
-     🥩  MEAT & POULTRY — COMPLETE SECTION
+       MEAT & POULTRY — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Chicken — Raw ─────────────────────────────────── */
@@ -926,7 +926,7 @@ const FOOD_DB = {
 
 
 /* ══════════════════════════════════════════════════════
-     🐟  SEAFOOD — COMPLETE SECTION
+       SEAFOOD — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Salmon ────────────────────────────────────────── */
@@ -1077,7 +1077,7 @@ const FOOD_DB = {
 
 
 /* ══════════════════════════════════════════════════════
-     🥚  EGGS & DAIRY — COMPLETE SECTION
+       EGGS & DAIRY — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Eggs — Raw ────────────────────────────────────── */
@@ -1235,7 +1235,7 @@ const FOOD_DB = {
 
 
  /* ══════════════════════════════════════════════════════
-     🫘  LEGUMES & PULSES — COMPLETE SECTION.
+       LEGUMES & PULSES — COMPLETE SECTION.
   ══════════════════════════════════════════════════════ */
 
   /* ── Lentils (Cooked) ──────────────────────────────── */
@@ -1355,7 +1355,7 @@ const FOOD_DB = {
 
 
  /* ══════════════════════════════════════════════════════
-     🥦  VEGETABLES — COMPLETE SECTION
+       VEGETABLES — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Leafy Greens ──────────────────────────────────── */
@@ -1546,7 +1546,7 @@ const FOOD_DB = {
 
 
   /* ══════════════════════════════════════════════════════
-     🍎  FRUITS — COMPLETE SECTION
+       FRUITS — COMPLETE SECTION
      Replace your existing fruits block with this.
      Paste everything below into your FOOD_DB object.
   ══════════════════════════════════════════════════════ */
@@ -1692,7 +1692,7 @@ const FOOD_DB = {
 
 
 /* ══════════════════════════════════════════════════════
-     🥜  NUTS & SEEDS — COMPLETE SECTION
+       NUTS & SEEDS — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Almonds ───────────────────────────────────────── */
@@ -1834,7 +1834,7 @@ const FOOD_DB = {
 
 
  /* ══════════════════════════════════════════════════════
-     🍝  PASTA & NOODLES — COMPLETE SECTION
+       PASTA & NOODLES — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Italian Pasta — Dry ───────────────────────────── */
@@ -1952,7 +1952,7 @@ const FOOD_DB = {
 
 
  /* ══════════════════════════════════════════════════════
-     🍕  FAST FOOD & STREET FOOD — COMPLETE SECTION
+       FAST FOOD & STREET FOOD — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Pizza ─────────────────────────────────────────── */
@@ -2130,7 +2130,7 @@ const FOOD_DB = {
 
 
 /* ══════════════════════════════════════════════════════
-     🍰  DESSERTS & SWEETS — COMPLETE SECTION
+       DESSERTS & SWEETS — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Indian Sweets — Milk-Based ────────────────────── */
@@ -2299,7 +2299,7 @@ const FOOD_DB = {
 
 
   /* ══════════════════════════════════════════════════════
-     ☕  BEVERAGES — COMPLETE SECTION
+       BEVERAGES — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Water & Plain ─────────────────────────────────── */
@@ -2592,7 +2592,7 @@ const FOOD_DB = {
 
 
 /* ══════════════════════════════════════════════════════
-     🫒  OILS, FATS & CONDIMENTS — COMPLETE SECTION
+       OILS, FATS & CONDIMENTS — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Cooking Oils ──────────────────────────────────── */
@@ -2797,7 +2797,7 @@ const FOOD_DB = {
 
   
 /* ══════════════════════════════════════════════════════
-     🍱  INTERNATIONAL DISHES — COMPLETE SECTION
+       INTERNATIONAL DISHES — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Japanese ──────────────────────────────────────── */
@@ -2984,7 +2984,7 @@ const FOOD_DB = {
 
 
 /* ══════════════════════════════════════════════════════
-     🥗  SALADS & PREPARED DISHES — COMPLETE SECTION
+       SALADS & PREPARED DISHES — COMPLETE SECTION
   ══════════════════════════════════════════════════════ */
 
   /* ── Western / Global Salads ───────────────────────── */
@@ -3091,7 +3091,7 @@ const FOOD_DB = {
 
 
   /* ══════════════════════════════════════════════════════
-     ☕  BEVERAGES
+       BEVERAGES
   ══════════════════════════════════════════════════════ */
 
   "water":                         { name:"Water",                          category:"Beverages", unit:"ml", base:100, cal:0,  prot:0,   carb:0,   fat:0,   servingSize:250, servingLabel:"1 glass" },
@@ -3126,7 +3126,7 @@ const FOOD_DB = {
 
 
   /* ══════════════════════════════════════════════════════
-     🍿  SNACKS — GLOBAL & INDIAN
+       SNACKS — GLOBAL & INDIAN
 
   ══════════════════════════════════════════════════════ */
 

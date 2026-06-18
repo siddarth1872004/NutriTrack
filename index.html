@@ -31,14 +31,14 @@
     <div id="savedPulse" class="saved-pulse" title="Auto-saved">✓</div>
   </div>
   <div class="header-right">
-    <button id="themeBtn"      class="icon-btn" title="Toggle theme">☀</button>
+    <button id="themeBtn"      class="icon-btn" title="Toggle theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"/><circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"/></svg></button>
     <button id="shortcutsBtn"  class="icon-btn" title="Shortcuts (?)">⌨</button>
-    <button id="historyBtn"    class="icon-btn" title="History (H)">📅</button>
-    <button id="templatesBtn"  class="icon-btn" title="Meal Templates (T)">📋</button>
-    <button id="logWeightBtn"  class="icon-btn" title="Log body weight (W)">⚖</button>
-    <button id="goalsBtn"      class="icon-btn" title="Goals (G)">🎯 Goals</button>
+    <button id="historyBtn"    class="icon-btn" title="History (H)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+    <button id="templatesBtn"  class="icon-btn" title="Meal Templates (T)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></button>
+    <button id="logWeightBtn"  class="icon-btn" title="Log body weight (W)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg></button>
+    <button id="goalsBtn"      class="icon-btn" title="Goals (G)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Goals</button>
     <button id="memoryBtn"     class="memory-btn" title="NutriMemory (M)">
-      🧠 <span class="mem-label">Memory</span>
+       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" /></svg><span class="mem-label">Memory</span>
       <span class="mem-badge" id="memoryCount">0</span>
     </button>
   </div>
@@ -58,7 +58,7 @@
       </div>
       <div class="search-row">
         <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
           <input id="foodInput" type="text"
             placeholder="chicken breast, idli, 'dal', oats…"
             autocomplete="off" spellcheck="false" aria-label="Search food">
@@ -95,8 +95,8 @@
 
       <div class="card-controls">
         <div id="modeTabs" class="mode-tabs">
-          <button id="tabWeight" class="mode-tab active">⚖ Weight</button>
-          <button id="tabCount"  class="mode-tab">🔢 Count</button>
+          <button id="tabWeight" class="mode-tab active"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg>Weight</button>
+          <button id="tabCount"  class="mode-tab"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>Count</button>
         </div>
         <select id="mealSelector" class="meal-select"></select>
       </div>
@@ -161,15 +161,15 @@
 
       <div class="card-actions">
         <button id="addLogBtn" class="add-btn">＋ Log Food <kbd class="btn-kbd">Ctrl↵</kbd></button>
-        <button id="compareBtn"     class="icon-action-btn" title="Compare with another food">⚖</button>
-        <button id="saveMemoryBtn"  class="icon-action-btn" title="Save to NutriMemory">🧠</button>
+        <button id="compareBtn"     class="icon-action-btn" title="Compare with another food"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M16 3h5v5M4 21L20 5M20 21H4V4"/></svg></button>
+        <button id="saveMemoryBtn"  class="icon-action-btn" title="Save to NutriMemory"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
       </div>
     </div>
 
     <!-- Water tracker -->
     <div class="water-card">
       <div class="water-header">
-        <span class="section-label">💧 Water</span>
+        <span class="section-label"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #38bdf8; vertical-align: middle; margin-right: 4px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>Water</span>
         <div class="water-goal-wrap">
           <span id="waterText" class="water-text">0L / 2.5L</span>
           <button id="editWaterGoalBtn" class="water-goal-btn" title="Set water goal">Goal</button>
@@ -199,7 +199,7 @@
     <!-- Body weight widget -->
     <div class="bodyweight-card">
       <div class="bw-header">
-        <span class="section-label">⚖ Body Weight</span>
+        <span class="section-label"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg>Body Weight</span>
         <button id="logWeightBtn2" class="bw-log-btn" data-action="click-log-weight">Log</button>
       </div>
       <div class="bw-display">
@@ -234,13 +234,13 @@
         <div class="totals-header-right">
           <!-- Exercise pill shows when calories burned > 0 -->
           <div id="exercisePill" class="exercise-pill" style="display:none" title="Click × to remove exercise calories">
-            <span class="ep-icon">🔥</span>
+            <span class="ep-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444; vertical-align: middle; margin-right: 4px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span>
             <span class="ep-kcal" id="burnedPillText"></span>
             <span class="ep-x" id="unlogBurnBtn" data-action="unlog-burn" title="Remove exercise log">✕</span>
           </div>
           <div class="burn-btns">
-            <button id="burnBtn"     class="burn-btn" title="Log exercise calories burned">🔥 Exercise</button>
-            <button id="burnCalcBtn" class="burn-btn burn-calc-btn" title="Activity calculator">⚡ Calc</button>
+            <button id="burnBtn"     class="burn-btn" title="Log exercise calories burned"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Exercise</button>
+            <button id="burnCalcBtn" class="burn-btn burn-calc-btn" title="Activity calculator"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Calc</button>
           </div>
         </div>
       </div>
@@ -335,9 +335,9 @@
           <div class="log-search-wrap">
             <input id="logSearchInput" type="text" class="log-search" placeholder="Filter log…">
           </div>
-          <button id="copyLogBtn"     class="log-action-btn" title="Copy log to clipboard">📋</button>
-          <button id="saveTemplateBtn" class="log-action-btn" title="Save as meal template (T)">💾</button>
-          <button id="clearLogBtn"    class="clear-btn" title="Clear log">🗑</button>
+          <button id="copyLogBtn"     class="log-action-btn" title="Copy log to clipboard"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          <button id="saveTemplateBtn" class="log-action-btn" title="Save as meal template (T)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+          <button id="clearLogBtn"    class="clear-btn" title="Clear log"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
         </div>
       </div>
       <div id="logEntries" class="log-entries"></div>
@@ -350,7 +350,7 @@
 <div id="memoryOverlay" class="drawer-overlay"></div>
 <aside id="memoryDrawer" class="memory-drawer">
   <div class="drawer-header">
-    <h2 class="drawer-title">🧠 NutriMemory</h2>
+    <h2 class="drawer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" /></svg>NutriMemory</h2>
     <button id="closeMemory" class="drawer-close">✕</button>
   </div>
   <div class="drawer-search">
@@ -365,7 +365,7 @@
 <div id="historyOverlay" class="drawer-overlay"></div>
 <aside id="historyDrawer" class="memory-drawer history-drawer">
   <div class="drawer-header">
-    <h2 class="drawer-title">📅 History</h2>
+    <h2 class="drawer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>History</h2>
     <button id="closeHistory" class="drawer-close">✕</button>
   </div>
   <div id="calorieHeatmap" class="calorie-heatmap"></div>
@@ -376,7 +376,7 @@
 <div id="templatesOverlay" class="drawer-overlay"></div>
 <aside id="templatesDrawer" class="memory-drawer templates-drawer">
   <div class="drawer-header">
-    <h2 class="drawer-title">📋 Meal Templates</h2>
+    <h2 class="drawer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>Meal Templates</h2>
     <button id="closeTemplates" class="drawer-close">✕</button>
   </div>
   <div class="drawer-hint">Save today's log as a reusable template — load it on any day to pre-fill your log instantly.</div>
@@ -387,7 +387,7 @@
 <div id="compareOverlay" class="drawer-overlay"></div>
 <aside id="compareDrawer" class="memory-drawer compare-drawer">
   <div class="drawer-header">
-    <h2 class="drawer-title">⚖ Compare Foods</h2>
+    <h2 class="drawer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M16 3h5v5M4 21L20 5M20 21H4V4"/></svg>Compare Foods</h2>
     <button id="closeCompare" class="drawer-close">✕</button>
   </div>
   <div class="cmp-search-wrap">
@@ -402,7 +402,7 @@
 <div id="addFoodModal" class="modal-backdrop">
   <div class="modal-box">
     <div class="modal-header">
-      <h2>🧪 Add Custom Food</h2>
+      <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Add Custom Food</h2>
       <button id="closeAddFoodModal" class="modal-close">✕</button>
     </div>
     <div class="modal-body">
@@ -461,12 +461,12 @@
 <div id="goalsModal" class="modal-backdrop">
   <div class="modal-box modal-box-wide">
     <div class="modal-header">
-      <h2>🎯 Daily Goals</h2>
+      <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Daily Goals</h2>
       <button id="closeGoalsModal" class="modal-close">✕</button>
     </div>
     <div class="modal-body">
       <div class="tdee-section">
-        <div class="tdee-title">⚡ TDEE Calculator <span class="tdee-sub">auto-fill from your stats</span></div>
+        <div class="tdee-title"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>TDEE Calculator <span class="tdee-sub">auto-fill from your stats</span></div>
         <div class="form-grid tdee-grid">
           <div class="form-group"><label>Age</label><input id="tdeeAge" type="number" placeholder="25"></div>
           <div class="form-group"><label>Weight (kg)</label><input id="tdeeWeight" type="number" step="0.1" placeholder="70"></div>
@@ -510,7 +510,7 @@
 <!-- NOTE MODAL -->
 <div id="noteModal" class="modal-backdrop">
   <div class="modal-box modal-box-sm">
-    <div class="modal-header"><h2>📝 Entry Note</h2>
+    <div class="modal-header"><h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Entry Note</h2>
       <button class="modal-close" data-close-modal="noteModal">✕</button></div>
     <div class="modal-body">
       <div class="form-group">
@@ -528,7 +528,7 @@
 <!-- BURN MODAL -->
 <div id="burnModal" class="modal-backdrop">
   <div class="modal-box modal-box-sm">
-    <div class="modal-header"><h2>🔥 Log Exercise</h2>
+    <div class="modal-header"><h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Log Exercise</h2>
       <button id="cancelBurnBtn" class="modal-close">✕</button></div>
     <div class="modal-body">
       <p class="modal-hint">Burned calories subtract from your net calorie goal.</p>
@@ -548,7 +548,7 @@
 <!-- ACTIVITY CALC MODAL -->
 <div id="burnCalcModal" class="modal-backdrop">
   <div class="modal-box modal-box-sm">
-    <div class="modal-header"><h2>⚡ Activity Calculator</h2>
+    <div class="modal-header"><h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Activity Calculator</h2>
       <button id="closeBurnCalcModal" class="modal-close">✕</button></div>
     <div class="modal-body">
       <p class="modal-hint">Estimate calories burned from exercise using MET values.</p>
@@ -573,7 +573,7 @@
 <!-- BODY WEIGHT MODAL -->
 <div id="weightModal" class="modal-backdrop">
   <div class="modal-box modal-box-sm">
-    <div class="modal-header"><h2>⚖ Log Body Weight</h2>
+    <div class="modal-header"><h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg>Log Body Weight</h2>
       <button id="cancelWeightBtn" class="modal-close">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
@@ -619,24 +619,24 @@
 <nav class="mobile-tabs" id="mobileTabBar">
   <div class="mobile-tab-inner">
     <button class="mob-tab active" data-tab="search">
-      <span class="tab-icon">🔍</span>
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <span>Search</span>
     </button>
     <button class="mob-tab" data-tab="log">
-      <span class="tab-icon">📋</span>
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span>
       <span>Log</span>
       <span class="mob-badge" id="mobLogBadge" style="display:none"></span>
     </button>
     <button class="mob-tab" data-tab="stats">
-      <span class="tab-icon">📊</span>
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
       <span>Stats</span>
     </button>
     <button class="mob-tab" data-tab="water">
-      <span class="tab-icon">💧</span>
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
       <span>Water</span>
     </button>
     <button class="mob-tab" data-tab="more">
-      <span class="tab-icon">☰</span>
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></span>
       <span>More</span>
     </button>
   </div>
@@ -647,28 +647,28 @@
   <div class="more-sheet-handle"></div>
   <div class="more-sheet-grid">
     <button class="more-item" data-action="open-history">
-      <span class="more-icon">📅</span><span>History</span>
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>History</span>
     </button>
     <button class="more-item" data-action="open-memory">
-      <span class="more-icon">🧠</span><span>Memory</span>
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" /></svg></span><span>Memory</span>
     </button>
     <button class="more-item" data-action="open-templates">
-      <span class="more-icon">📋</span><span>Templates</span>
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span><span>Templates</span>
     </button>
     <button class="more-item" data-action="more-log-weight">
-      <span class="more-icon">⚖</span><span>Weight</span>
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg></span><span>Weight</span>
     </button>
     <button class="more-item" data-action="more-goals">
-      <span class="more-icon">🎯</span><span>Goals</span>
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><span>Goals</span>
     </button>
     <button class="more-item" data-action="more-burn-calc">
-      <span class="more-icon">⚡</span><span>Burn Calc</span>
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span>Burn Calc</span>
     </button>
     <button class="more-item" data-action="more-shortcuts">
       <span class="more-icon">⌨</span><span>Shortcuts</span>
     </button>
     <button class="more-item" data-action="more-theme">
-      <span class="more-icon">🎨</span><span>Theme</span>
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"/><circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"/></svg></span><span>Theme</span>
     </button>
   </div>
 </div>
