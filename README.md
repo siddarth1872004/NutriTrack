@@ -1,6 +1,6 @@
-# LogYourCals
+# NutriTrack-FOSS
 
-LogYourCals is a fully client-side, Free and Open Source Software (FOSS) calorie tracking web application. Designed for privacy, speed, and offline reliability, it requires no account creation or external server connection, keeping all your nutritional logs securely saved in your browser's local storage.
+NutriTrack-FOSS is a fully client-side, Free and Open Source Software (FOSS) calorie tracking web application. Designed for privacy, speed, and offline reliability, it requires no account creation or external server connection, keeping all your nutritional logs securely saved in your browser's local storage.
 
 ---
 
@@ -42,8 +42,8 @@ Since LogYourCals is built using pure ESM modules without complex build pipeline
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/siddarth1872004/LogYourCals.git
-   cd LogYourCals
+   git clone https://github.com/siddarth1872004/NutriTrack-FOSS.git
+   cd NutriTrack-FOSS
    ```
 
 2. **Run a local static web server**:
