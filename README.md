@@ -12,7 +12,7 @@ NutriTrack is a fully client-side, Free and Open Source Software (FOSS) calorie 
 - ** Custom Intake Goals**: Set personalized targets for macronutrients (protein, carbs, fat), general calories, and water intake.
 - ** Meal Templates & Custom Foods**: Create reusable food entries and save composite meal layouts for quick log convenience.
 - ** Weight Logging & Tracking**: Maintain historical tracking of body weight goals.
-- **⌨ Keyboard-Driven UX**: Full shortcuts support for hands-on-keyboard logging (e.g. `/` for search, `Ctrl+Z` to undo, `M` for NutriMemory).
+- ** Keyboard-Driven UX**: Full shortcuts support for hands-on-keyboard logging (e.g. `/` for search, `Ctrl+Z` to undo, `M` for NutriMemory).
 - ** JSON Data Export & Import**: Backup or move your data with local file operations (zero server dependency).
 
 ---
@@ -38,7 +38,7 @@ NutriTrack is a fully client-side, Free and Open Source Software (FOSS) calorie 
 
 ## Local Setup
 
-Since LogYourCals is built using pure ESM modules without complex build pipelines, you can run it directly:
+Since NutriTrack is built using pure ESM modules without complex build pipelines, you can run it directly:
 
 1. **Clone the repository**:
    ```bash
@@ -63,7 +63,7 @@ Since LogYourCals is built using pure ESM modules without complex build pipeline
 ## File Structure
 
 ```
-LogYourCals/
+NutriTrack/
 ├── index.html       # Single Page Application layout & Modals
 ├── css/
 │   └── styles.css   # Main layout, typography, dark mode & transitions

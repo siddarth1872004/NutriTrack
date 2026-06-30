@@ -1,0 +1,11 @@
+# Local dependencies
+node_modules/
+package-lock.json
+
+# IDE configurations and metadata
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
