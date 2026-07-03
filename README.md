@@ -1,4 +1,4 @@
-# NutriTrack -- Client-Side Calorie & Weight Tracker
+# NutriTrack -- Client-Side Calorie and Weight Tracker
 
 NutriTrack is a privacy-first, free and open-source (FOSS) nutrition tracking and body weight logging application built with pure HTML5, Vanilla CSS, and JavaScript. It operates entirely client-side -- preserving user privacy by storing all meal logs, custom recipes, and weight trends in browser LocalStorage without any external backend servers or data telemetry.
 
@@ -8,28 +8,39 @@ NutriTrack is a privacy-first, free and open-source (FOSS) nutrition tracking an
 
 ```mermaid
 graph TB
-    subgraph UI_LAYER["HTML5 / CSS Web Interface"]
-        DASH[Dashboard Overview]
-        LOG[Daily Meal & Calorie Logger]
-        WEIGHT[Weight Tracking & Progress Chart]
-        CALC[TDEE / MET Activity Calculator]
+    subgraph UI_LAYER["HTML5 and CSS Web Interface"]
+        DASH["Dashboard Overview"]
+        LOG["Daily Meal and Calorie Logger"]
+        WEIGHT["Weight Tracking and Progress Chart"]
+        CALC["TDEE / MET Activity Calculator"]
     end
 
-    subgraph ENGINE["Core JavaScript Engine (js/app.js)"]
-        MACRO[Macro Target Calculator (Protein, Carbs, Fat)]
-        SEARCH[Offline Food Database Search Engine]
-        CUSTOM[Custom Meal & Recipe Builder]
+    subgraph ENGINE["Core JavaScript Engine - app.js"]
+        MACRO["Macro Target Calculator - Protein, Carbs, Fat"]
+        SEARCH["Offline Food Database Search Engine"]
+        CUSTOM["Custom Meal and Recipe Builder"]
     end
 
-    subgraph LOCAL_DATA["Browser Storage Layer (js/memory.js)"]
-        FOOD_DB[Local Food Database (js/foods.js)]
-        USER_DATA[User Custom Foods (js/user_foods.js)]
-        LOCAL_STORAGE[Browser LocalStorage Logs & Profile]
+    subgraph LOCAL_DATA["Browser Storage Layer - memory.js"]
+        FOOD_DB["Local Food Database - foods.js"]
+        USER_DATA["User Custom Foods - user_foods.js"]
+        LOCAL_STORAGE["Browser LocalStorage Logs and Profile"]
     end
 
-    DASH & LOG & WEIGHT & CALC --> MACRO & SEARCH & CUSTOM
-    SEARCH --> FOOD_DB & USER_DATA
-    MACRO & CUSTOM --> LOCAL_STORAGE
+    DASH --> MACRO
+    LOG --> MACRO
+    WEIGHT --> MACRO
+    CALC --> MACRO
+
+    DASH --> SEARCH
+    LOG --> SEARCH
+    CALC --> SEARCH
+
+    SEARCH --> FOOD_DB
+    SEARCH --> USER_DATA
+
+    MACRO --> LOCAL_STORAGE
+    CUSTOM --> LOCAL_STORAGE
 
     style UI_LAYER fill:#18181b,stroke:#a1a1aa,color:#fff
     style ENGINE fill:#000000,stroke:#ffffff,color:#fff
@@ -43,19 +54,19 @@ graph TB
 ```mermaid
 sequenceDiagram
     participant User as User / Browser
-    participant App as Application Engine (app.js)
-    participant FoodDB as Offline Food Database (foods.js)
+    participant App as Application Engine
+    participant FoodDB as Offline Food Database
     participant Storage as Browser LocalStorage
 
-    User->>App: Enter daily weight & activity level
-    App->>App: Calculate TDEE & Macro target goals
-    User->>App: Search food item (e.g., "Chicken Breast")
+    User->>App: Enter daily weight and activity level
+    App->>App: Calculate TDEE and Macro target goals
+    User->>App: Search food item (e.g. Chicken Breast)
     App->>FoodDB: Query offline database
     FoodDB-->>App: Return macro profile per 100g
-    User->>App: Log portion size (e.g., 200g)
-    App->>Storage: Update daily calorie & macro total
+    User->>App: Log portion size (e.g. 200g)
+    App->>Storage: Update daily calorie and macro total
     Storage-->>App: Return historical trend data
-    App-->>User: Render updated progress bar & weight chart
+    App-->>User: Render updated progress bar and weight chart
 ```
 
 ---
@@ -64,8 +75,8 @@ sequenceDiagram
 
 - **100% Client-Side Privacy**: No account registration, zero remote servers, no third-party tracking. All data remains strictly on your device.
 - **Offline Food Database**: Embedded database containing hundreds of common food items with macro breakdowns (calories, protein, carbs, fats).
-- **TDEE & BMR Calculator**: Calculates Total Daily Energy Expenditure (TDEE) using the Mifflin-St Jeor equation and MET activity factors.
-- **Weight & Goal Progress Tracking**: Monitors body weight trajectory over time with visual progress indicators.
+- **TDEE and BMR Calculator**: Calculates Total Daily Energy Expenditure (TDEE) using the Mifflin-St Jeor equation and MET activity factors.
+- **Weight and Goal Progress Tracking**: Monitors body weight trajectory over time with visual progress indicators.
 - **Zero Dependencies**: Lightweight, framework-free single-page application requiring no npm install or build step.
 
 ---
@@ -75,16 +86,16 @@ sequenceDiagram
 ```
 NutriTrack/
 |-- index.html              # Main application single-page structure
-|-- README.md               # ASCII Architecture & User Documentation
+|-- README.md               # ASCII Architecture and User Documentation
 |-- LICENSE                 # MIT License file
 |-- .gitignore              # Git ignore rules
 |-- css/                    # Modular stylesheets
-|   |-- styles.css          # Main UI layout & responsive styles
+|   |-- styles.css          # Main UI layout and responsive styles
 |   `-- reset.css           # CSS reset definitions
 `-- js/                     # Application JavaScript logic
-    |-- app.js              # Main application orchestrator & UI controller
+    |-- app.js              # Main application orchestrator and UI controller
     |-- foods.js            # Offline nutritional database
-    |-- user_foods.js       # Custom user recipes & food storage
+    |-- user_foods.js       # Custom user recipes and food storage
     `-- memory.js           # LocalStorage persistent storage wrapper
 ```
 
