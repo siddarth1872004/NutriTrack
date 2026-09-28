@@ -1,5 +1,5 @@
 /**
- * NutriLog — User Custom Foods Database
+ * NutriTrack — User Custom Foods Database
  * ─────────────────────────────────────────────────────────
  * This file is auto-managed by the app. DO NOT hand-edit
  * unless you know what you're doing.
