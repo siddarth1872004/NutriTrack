@@ -91,11 +91,6 @@ NutriTrack/
 |-- favicon.svg             # App icon
 |-- README.md               # Architecture and user documentation
 |-- LICENSE                 # MIT License file
-|-- .nojekyll               # Serve files as-is on GitHub Pages
-|-- .gitignore              # Git ignore rules
-|-- .github/
-|   `-- workflows/
-|       `-- pages.yml       # GitHub Pages deployment workflow
 |-- css/
 |   `-- styles.css          # Main UI layout and responsive styles
 `-- js/                     # Application JavaScript logic (ES modules)
@@ -127,10 +122,11 @@ Because NutriTrack is a client-side web app with zero server dependencies, you c
 
 ### Deploying to GitHub Pages
 
-The workflow in `.github/workflows/pages.yml` publishes the site on every push to `main` (it can also be run manually from the **Actions** tab).
+NutriTrack is a static site, so GitHub Pages can serve it straight from the repository with no build step.
 
-1. In the repository, open **Settings > Pages** and set **Source** to **GitHub Actions** (one-time setup).
-2. Push or merge to `main`. The site is published at `https://siddarth1872004.github.io/NutriTrack/`.
+1. In the repository, open **Settings > Pages**.
+2. Under **Build and deployment**, set **Source** to **Deploy from a branch**, pick `main` and `/ (root)`, then click **Save**.
+3. After a minute the site is live at `https://siddarth1872004.github.io/NutriTrack/`. Every push to `main` updates it automatically.
 
 ---
 
