@@ -2,6 +2,8 @@
 
 NutriTrack is a privacy-first, free and open-source (FOSS) nutrition tracking and body weight logging application built with pure HTML5, Vanilla CSS, and JavaScript. It operates entirely client-side -- preserving user privacy by storing all meal logs, custom recipes, and weight trends in browser LocalStorage without any external backend servers or data telemetry.
 
+**Live app:** https://siddarth1872004.github.io/NutriTrack/
+
 ---
 
 ## Architecture Topology
@@ -86,13 +88,17 @@ sequenceDiagram
 ```
 NutriTrack/
 |-- index.html              # Main application single-page structure
-|-- README.md               # ASCII Architecture and User Documentation
+|-- favicon.svg             # App icon
+|-- README.md               # Architecture and user documentation
 |-- LICENSE                 # MIT License file
+|-- .nojekyll               # Serve files as-is on GitHub Pages
 |-- .gitignore              # Git ignore rules
-|-- css/                    # Modular stylesheets
-|   |-- styles.css          # Main UI layout and responsive styles
-|   `-- reset.css           # CSS reset definitions
-`-- js/                     # Application JavaScript logic
+|-- .github/
+|   `-- workflows/
+|       `-- pages.yml       # GitHub Pages deployment workflow
+|-- css/
+|   `-- styles.css          # Main UI layout and responsive styles
+`-- js/                     # Application JavaScript logic (ES modules)
     |-- app.js              # Main application orchestrator and UI controller
     |-- foods.js            # Offline nutritional database
     |-- user_foods.js       # Custom user recipes and food storage
@@ -113,13 +119,18 @@ Because NutriTrack is a client-side web app with zero server dependencies, you c
    cd NutriTrack
    ```
 
-2. **Open index.html**:
-   - Simply double-click `index.html` to open it in Chrome, Firefox, Edge, or Safari.
-   - Or serve locally using Python:
-     ```bash
-     python -m http.server 8000
-     ```
-     Then navigate to `http://localhost:8000`.
+2. **Serve the folder** (the app uses ES modules, which browsers block over `file://`, so use a local web server rather than double-clicking `index.html`):
+   ```bash
+   python -m http.server 8000
+   ```
+   Then navigate to `http://localhost:8000`.
+
+### Deploying to GitHub Pages
+
+The workflow in `.github/workflows/pages.yml` publishes the site on every push to `main` (it can also be run manually from the **Actions** tab).
+
+1. In the repository, open **Settings > Pages** and set **Source** to **GitHub Actions** (one-time setup).
+2. Push or merge to `main`. The site is published at `https://siddarth1872004.github.io/NutriTrack/`.
 
 ---
 

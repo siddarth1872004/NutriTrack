@@ -1424,7 +1424,7 @@ g('exportBtn')?.addEventListener('click',()=>{
   const data={version:3,exported:new Date().toISOString(),goals,waterGoal,mealGroups,savedFoods,history,userFoods:USER_DB,recents:recentFoods,templates:mealTemplates,bodyWeight,streak:streakData,
     today:{date:todayKey(),entries:logEntries,waterMl,burned:caloriesBurned}};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`logyourcals-${todayKey()}.json`;a.click();URL.revokeObjectURL(url);showToast('Data exported ✓');
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`nutritrack-${todayKey()}.json`;a.click();URL.revokeObjectURL(url);showToast('Data exported ✓');
 });
 g('importBtn')?.addEventListener('click',()=>g('importFile')?.click());
 g('importFile')?.addEventListener('change',function(e){
@@ -1457,7 +1457,7 @@ g('importFile')?.addEventListener('change',function(e){
 g('copyLogBtn')?.addEventListener('click',()=>{
   if(!logEntries.length){showToast('Nothing to copy','warn');return;}
   const date=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  let text=`LogYourCals — ${date}\n${'─'.repeat(36)}\n\n`;
+  let text=`NutriTrack — ${date}\n${'─'.repeat(36)}\n\n`;
   const groups={};mealGroups.forEach(m=>groups[m]=[]);groups['Other']=[];
   logEntries.forEach(e=>{const g2=mealGroups.includes(e.meal)?e.meal:'Other';groups[g2].push(e);});
   [...mealGroups,'Other'].forEach(meal=>{const ents=groups[meal];if(!ents.length)return;text+=`${meal.toUpperCase()}\n`;ents.forEach(e=>text+=`  • ${e.name} — ${e.portion} → ${e.cal} kcal | ${e.prot}g P | ${e.carb}g C | ${e.fat}g F${e.note?' ('+e.note+')':''}\n`);text+='\n';});
