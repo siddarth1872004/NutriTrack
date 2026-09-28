@@ -25,7 +25,7 @@ let history      = _load('nutrilog_history')      || {};   // { "YYYY-MM-DD": [e
 let waterGoal    = parseInt(localStorage.getItem('nutrilog_watergoal') || '2500');
 let mealGroups   = _load('nutrilog_mealgroups')   || ['Breakfast','Lunch','Dinner','Snacks'];
 let streakData   = _load('nutrilog_streak')       || { count:0, lastDate:'' };
-let theme        = localStorage.getItem('nutrilog_theme') || 'dark';
+let theme        = localStorage.getItem('nutrilog_theme') || 'light';
 let bodyWeight   = _load('nutrilog_bodyweight')   || [];
 let mealTemplates= _load('nutrilog_meal_templates')|| {};
 
@@ -195,7 +195,16 @@ function persistLog() {
 /* ─── Apply theme ──────────────────────────────────── */
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', theme);
-  const btn = g('themeBtn'); if(btn) btn.textContent = theme==='dark' ? '' : '';
+  const btn = g('themeBtn');
+  if (btn) {
+    btn.innerHTML = theme==='dark'
+      ? '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    btn.title = theme==='dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = theme==='dark' ? '#11110f' : '#f4f0e6';
+  if (typeof bodyWeight !== 'undefined') { try { renderWeightChart(); } catch(_) {} }
 }
 applyTheme();
 g('themeBtn')?.addEventListener('click', () => {
@@ -743,10 +752,8 @@ function updateTotals() {
   // ── Remaining ──────────────────────────────────────
   const remEl = g('caloriesRemaining');
   if (remEl) {
-    remEl.textContent = rem >= 0
-      ? `${Math.round(rem)} kcal remaining`
-      : `${Math.abs(Math.round(rem))} kcal over`;
-    remEl.className = 'cal-remaining' + (rem < 0 ? ' over' : '');
+    remEl.textContent = `${Math.abs(Math.round(rem))} kcal`;
+    remEl.className = 'cri-val cri-remaining' + (rem < 0 ? ' over' : '');
   }
   const remLabel = g('criRemLabel');
   if (remLabel) remLabel.textContent = rem < 0 ? 'Over by' : 'Remaining';
@@ -1407,13 +1414,15 @@ function renderWeightChart(){
   const mn=Math.min(...vals)-0.5,mx=Math.max(...vals)+0.5,rng=mx-mn||1;
   ctx.clearRect(0,0,w,h);
   const sx=i=>i*(w/(pts.length-1));const sy=v=>h-6-((v-mn)/rng)*(h-12);
-  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  const css=getComputedStyle(document.documentElement),cv=n=>css.getPropertyValue(n).trim();
+  const ink=cv('--ink')||'#141412',hair=cv('--hair')||'rgba(0,0,0,.12)',acc=cv('--accent')||'#ff4d1a';
+  ctx.strokeStyle=hair;ctx.lineWidth=1;ctx.setLineDash([2,3]);
   [0.25,0.5,0.75].forEach(t=>{const y=(h-12)*t+6;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
-  ctx.beginPath();ctx.strokeStyle='rgba(108,99,255,.75)';ctx.lineWidth=2;ctx.lineJoin='round';
+  ctx.setLineDash([]);
+  ctx.beginPath();ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.lineJoin='round';
   pts.forEach((p,i)=>i===0?ctx.moveTo(sx(i),sy(p.kg)):ctx.lineTo(sx(i),sy(p.kg)));ctx.stroke();
-  ctx.lineTo(sx(pts.length-1),h);ctx.lineTo(0,h);ctx.closePath();ctx.fillStyle='rgba(108,99,255,.07)';ctx.fill();
-  pts.forEach((p,i)=>{ctx.beginPath();ctx.arc(sx(i),sy(p.kg),2.5,0,Math.PI*2);ctx.fillStyle='#9b94ff';ctx.fill();});
-  const l=pts.at(-1);ctx.fillStyle='rgba(232,234,240,.75)';ctx.font='bold 9px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(l.kg+'kg',w-3,sy(l.kg)-5);
+  pts.forEach((p,i)=>{ctx.beginPath();ctx.rect(sx(i)-2.5,sy(p.kg)-2.5,5,5);ctx.fillStyle=i===pts.length-1?acc:ink;ctx.fill();});
+  const l=pts.at(-1);ctx.fillStyle=ink;ctx.font='700 10px "JetBrains Mono",monospace';ctx.textAlign='right';ctx.fillText(l.kg+'kg',w-3,sy(l.kg)-5);
 }
 
 
