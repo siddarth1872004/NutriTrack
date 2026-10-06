@@ -1,5 +1,5 @@
-import FOOD_DB from './foods.js';
-import { createFoodMemory } from './memory.js';
+import FOOD_DB from './foods.js?v=2.0.0';
+import { createFoodMemory } from './memory.js?v=2.0.0';
 
 /* ══════════════════════════════════════════════════════
    NUTRILOG — v5  (clean unified rewrite)

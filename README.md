@@ -128,6 +128,8 @@ NutriTrack is a static site, so GitHub Pages can serve it straight from the repo
 2. Under **Build and deployment**, set **Source** to **Deploy from a branch**, pick `main` and `/ (root)`, then click **Save**.
 3. After a minute the site is live at `https://siddarth1872004.github.io/NutriTrack/`. Every push to `main` updates it automatically.
 
+> **Cache busting:** `index.html` loads the stylesheet and scripts with a `?v=` version suffix (and `js/app.js` imports its modules the same way). Bump that version whenever you change CSS or JS so returning visitors get the new files instead of a cached copy.
+
 ---
 
 ## License
