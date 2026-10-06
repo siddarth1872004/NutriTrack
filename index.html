@@ -13,11 +13,11 @@
   <meta property="og:description" content="Privacy-first calorie, macro and weight tracker that runs entirely in your browser.">
   <meta property="og:type" content="website">
   <title>NutriTrack</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.0.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=2.0.0">
+  <link rel="stylesheet" href="css/styles.css?v=2.1.0">
 </head>
 <body>
 <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -44,6 +44,9 @@
     <button id="shortcutsBtn"  class="icon-btn" title="Shortcuts (?)">⌨</button>
     <button id="historyBtn"    class="icon-btn" title="History (H)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
     <button id="templatesBtn"  class="icon-btn" title="Meal Templates (T)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></button>
+    <button id="reportsBtn"    class="icon-btn" title="Reports (R)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+    <button id="profileBtn"    class="icon-btn" title="Profile (P)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
+    <button id="adminBtn"      class="icon-btn" title="Data &amp; Admin (D)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></button>
     <button id="logWeightBtn"  class="icon-btn" title="Log body weight (W)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg></button>
     <button id="goalsBtn"      class="icon-btn" title="Goals (G)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Goals</button>
     <button id="memoryBtn"     class="memory-btn" title="NutriMemory (M)">
@@ -599,6 +602,67 @@
   </div>
 </div>
 
+<!-- REPORTS DRAWER -->
+<div id="reportsOverlay" class="drawer-overlay"></div>
+<aside id="reportsDrawer" class="memory-drawer reports-drawer">
+  <div class="drawer-header">
+    <h2 class="drawer-title">Progress Report</h2>
+    <button id="closeReports" class="drawer-close">✕</button>
+  </div>
+  <div class="rep-range">
+    <button class="rep-range-btn active" data-days="7">7 days</button>
+    <button class="rep-range-btn" data-days="30">30 days</button>
+    <button id="reportCsvBtn" class="rep-range-btn rep-csv">⬇ CSV</button>
+  </div>
+  <div id="reportBody" class="rep-body"></div>
+</aside>
+
+<!-- PROFILE MODAL -->
+<div id="profileModal" class="modal-backdrop">
+  <div class="modal-box modal-box-wide">
+    <div class="modal-header"><h2>Profile</h2>
+      <button id="closeProfileModal" class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid tdee-grid">
+        <div class="form-group full"><label>Name</label><input id="profName" type="text" maxlength="40" placeholder="Your name"></div>
+        <div class="form-group"><label>Age</label><input id="profAge" type="number" placeholder="25"></div>
+        <div class="form-group"><label>Gender</label>
+          <select id="profGender"><option value="male">Male</option><option value="female">Female</option></select></div>
+        <div class="form-group"><label>Height (cm)</label><input id="profHeight" type="number" placeholder="170"></div>
+        <div class="form-group"><label>Weight (kg)</label><input id="profWeight" type="number" step="0.1" placeholder="70"></div>
+        <div class="form-group full"><label>Activity Level</label><select id="profActivity"></select></div>
+        <div class="form-group full"><label>Goal</label><select id="profGoal"></select></div>
+      </div>
+      <div id="profSummary" class="prof-summary"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" data-close-modal="profileModal">Close</button>
+      <button id="saveProfileBtn" class="cancel-btn">Save Profile</button>
+      <button id="applyProfileBtn" class="add-btn">Save &amp; Set Goals</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN / DATA MODAL -->
+<div id="adminModal" class="modal-backdrop">
+  <div class="modal-box modal-box-wide">
+    <div class="modal-header"><h2>Data &amp; Admin</h2>
+      <button id="closeAdminModal" class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <div id="adminStats" class="admin-stats"></div>
+      <div class="admin-sec-title">Custom foods</div>
+      <div id="adminFoods" class="admin-foods"></div>
+      <div class="admin-sec-title">Maintenance</div>
+      <div class="import-export-row">
+        <button id="adminExportBtn" class="ie-btn">⬇ Export Data</button>
+        <button id="adminClearHistoryBtn" class="ie-btn">Clear history</button>
+        <button id="adminResetBtn" class="ie-btn ie-danger">Reset everything</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="cancel-btn" data-close-modal="adminModal">Close</button></div>
+  </div>
+</div>
+
 <!-- SHORTCUTS MODAL -->
 <div id="shortcutsModal" class="modal-backdrop">
   <div class="modal-box modal-box-sm">
@@ -618,6 +682,9 @@
         <tr><td><kbd>T</kbd></td><td>Meal Templates</td></tr>
         <tr><td><kbd>W</kbd></td><td>Log body weight</td></tr>
         <tr><td><kbd>E</kbd></td><td>Activity calorie calculator</td></tr>
+        <tr><td><kbd>R</kbd></td><td>Progress report</td></tr>
+        <tr><td><kbd>P</kbd></td><td>Profile</td></tr>
+        <tr><td><kbd>D</kbd></td><td>Data &amp; admin</td></tr>
         <tr><td><kbd>?</kbd></td><td>This shortcuts panel</td></tr>
       </table>
     </div>
@@ -667,6 +734,9 @@
     <button class="more-item" data-action="more-log-weight">
       <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg></span><span>Weight</span>
     </button>
+    <button class="more-item" data-action="open-reports"><span class="more-icon">▥</span><span>Reports</span></button>
+    <button class="more-item" data-action="open-profile"><span class="more-icon">☺</span><span>Profile</span></button>
+    <button class="more-item" data-action="open-admin"><span class="more-icon">⛁</span><span>Data</span></button>
     <button class="more-item" data-action="more-goals">
       <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><span>Goals</span>
     </button>
@@ -685,6 +755,6 @@
 
 <div id="toastContainer" class="toast-container"></div>
 
-<script type="module" src="js/app.js?v=2.0.0"></script>
+<script type="module" src="js/app.js?v=2.1.0"></script>
 </body>
 </html>

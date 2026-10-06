@@ -79,6 +79,9 @@ sequenceDiagram
 - **Offline Food Database**: Embedded database containing hundreds of common food items with macro breakdowns (calories, protein, carbs, fats).
 - **TDEE and BMR Calculator**: Calculates Total Daily Energy Expenditure (TDEE) using the Mifflin-St Jeor equation and MET activity factors.
 - **Weight and Goal Progress Tracking**: Monitors body weight trajectory over time with visual progress indicators.
+- **Profile Management**: Saved profile (age, height, weight, activity, goal) drives BMR/TDEE, BMI and calorie/macro targets for losing, maintaining or gaining weight (`P`).
+- **Progress Reports**: 7 and 30 day calorie chart against your goal, adherence, average macros, weight change and CSV export (`R`).
+- **Data and Admin Panel**: Storage usage, custom food management, history clearing and full reset (`D`).
 - **Zero Dependencies**: Lightweight, framework-free single-page application requiring no npm install or build step.
 
 ---
@@ -97,7 +100,9 @@ NutriTrack/
     |-- app.js              # Main application orchestrator and UI controller
     |-- foods.js            # Offline nutritional database
     |-- user_foods.js       # Custom user recipes and food storage
-    `-- memory.js           # LocalStorage persistent storage wrapper
+    |-- memory.js           # Food search index and LocalStorage wrapper
+    |-- profile.js          # Profile validation, BMR/TDEE/BMI and goal targets
+    `-- reports.js          # 7/30-day progress report aggregation and CSV export
 ```
 
 ---
@@ -131,6 +136,26 @@ NutriTrack is a static site, so GitHub Pages can serve it straight from the repo
 > **Cache busting:** `index.html` loads the stylesheet and scripts with a `?v=` version suffix (and `js/app.js` imports its modules the same way). Bump that version whenever you change CSS or JS so returning visitors get the new files instead of a cached copy.
 
 ---
+
+## Architecture Coverage
+
+Implementation status against the project architecture deck (Calorie Tracker: archetypes, component structure, refined component structure).
+
+| Component | Subcomponents | Status |
+|---|---|---|
+| User Management | Registration, login, authentication | Not implemented (by design: no accounts or backend) |
+| | Profile | Done (local profile) |
+| Calorie Calculation | BMR/TDEE, goal-based target | Done |
+| Food Management | Offline search, nutrition info, custom foods | Done |
+| | External provider (USDA FoodData Central) | Not implemented |
+| Meal Tracking | Meal entry, quantity and portion, meal type, history | Done |
+| Nutrition and Progress | Calorie intake, macros, target comparison, daily summary | Done |
+| | Reports (7/30 day, CSV) | Done |
+| | PDF/printable reports, trends beyond 30 days | Not implemented |
+| Administration | Food data management, data monitoring | Done (local data panel) |
+| | Multi-user management, role-based admin | Not implemented (needs backend) |
+| Data Management | Local persistence, export/import | Done |
+| | Server database | Not implemented (needs backend) |
 
 ## License
 

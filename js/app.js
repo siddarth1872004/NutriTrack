@@ -1,5 +1,7 @@
-import FOOD_DB from './foods.js?v=2.0.0';
-import { createFoodMemory } from './memory.js?v=2.0.0';
+import FOOD_DB from './foods.js?v=2.1.0';
+import { createFoodMemory } from './memory.js?v=2.1.0';
+import { ACTIVITY_LEVELS, GOAL_TYPES, normalizeProfile, validateProfile, calcBMI, bmiCategory, calcTargets } from './profile.js?v=2.1.0';
+import { buildReport, weightChange, reportToCSV } from './reports.js?v=2.1.0';
 
 /* ══════════════════════════════════════════════════════
    NUTRILOG — v5  (clean unified rewrite)
@@ -28,6 +30,7 @@ let streakData   = _load('nutrilog_streak')       || { count:0, lastDate:'' };
 let theme        = localStorage.getItem('nutrilog_theme') || 'light';
 let bodyWeight   = _load('nutrilog_bodyweight')   || [];
 let mealTemplates= _load('nutrilog_meal_templates')|| {};
+let profile      = normalizeProfile(_load('nutrilog_profile') || {});
 
 /* ─── Session state (today) ────────────────────────── */
 let logEntries     = [];
@@ -623,11 +626,14 @@ document.addEventListener('keydown',e=>{
     if(e.key==='t'){e.preventDefault();openTemplatesDrawer();return;}
     if(e.key==='w'){e.preventDefault();g('logWeightBtn')?.click();return;}
     if(e.key==='e'){e.preventDefault();g('burnCalcBtn')?.click();return;}
+    if(e.key==='r'){e.preventDefault();openReportsDrawer();return;}
+    if(e.key==='p'){e.preventDefault();openProfileModal();return;}
+    if(e.key==='d'){e.preventDefault();openAdminModal();return;}
     if(e.key==='?'||e.key==='F1'){e.preventDefault();g('shortcutsModal')?.classList.add('open');return;}
   }
   if(e.key==='Escape'){
-    closeMemoryDrawer(); closeHistoryDrawer(); closeTemplatesDrawer(); closeCompareDrawer();
-    ['addFoodModal','goalsModal','shortcutsModal','noteModal','burnModal','burnCalcModal','weightModal'].forEach(id=>g(id)?.classList.remove('open'));
+    closeMemoryDrawer(); closeHistoryDrawer(); closeTemplatesDrawer(); closeCompareDrawer(); closeReportsDrawer();
+    ['profileModal','adminModal','addFoodModal','goalsModal','shortcutsModal','noteModal','burnModal','burnCalcModal','weightModal'].forEach(id=>g(id)?.classList.remove('open'));
     suggestBox?.classList.remove('open');
   }
 });
@@ -1430,7 +1436,7 @@ function renderWeightChart(){
    EXPORT / IMPORT
 ══════════════════════════════════════════════════════ */
 g('exportBtn')?.addEventListener('click',()=>{
-  const data={version:3,exported:new Date().toISOString(),goals,waterGoal,mealGroups,savedFoods,history,userFoods:USER_DB,recents:recentFoods,templates:mealTemplates,bodyWeight,streak:streakData,
+  const data={version:3,exported:new Date().toISOString(),goals,waterGoal,mealGroups,savedFoods,history,userFoods:USER_DB,recents:recentFoods,templates:mealTemplates,bodyWeight,profile,streak:streakData,
     today:{date:todayKey(),entries:logEntries,waterMl,burned:caloriesBurned}};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`nutritrack-${todayKey()}.json`;a.click();URL.revokeObjectURL(url);showToast('Data exported ✓');
@@ -1450,6 +1456,7 @@ g('importFile')?.addEventListener('change',function(e){
       if(data.userFoods)Object.assign(USER_DB,data.userFoods);persistUserDB();
       if(data.templates)Object.assign(mealTemplates,data.templates);_save('nutrilog_meal_templates',mealTemplates);
       if(data.bodyWeight){bodyWeight=[...bodyWeight,...data.bodyWeight].filter((v,i,a)=>a.findIndex(x=>x.date===v.date)===i).sort((a,b)=>a.date.localeCompare(b.date));_save('nutrilog_bodyweight',bodyWeight);}
+      if(data.profile){profile=normalizeProfile(data.profile);_save('nutrilog_profile',profile);}
       if(data.streak&&data.streak.count>streakData.count)streakData=data.streak;_save('nutrilog_streak',streakData);
       if(data.today?.entries&&data.today.date===todayKey()){logEntries=data.today.entries;waterMl=data.today.waterMl||0;caloriesBurned=data.today.burned||0;persistLog();localStorage.setItem('nutrilog_water_today',waterMl);localStorage.setItem('nutrilog_burned_today',caloriesBurned);}
       recomputeTotals();renderLog();updateTotals();updateWaterUI();renderMemoryCount();updateWeightDisplay();renderWeightChart();
@@ -1633,6 +1640,10 @@ document.addEventListener('click', (e) => {
     case 'unlog-burn': unlogBurn(); break;
     case 'open-add-custom': openAddFoodModal(''); break;
     case 'open-history': openHistoryDrawer(); closeMoreSheet(); break;
+    case 'open-reports': openReportsDrawer(); closeMoreSheet(); break;
+    case 'open-profile': openProfileModal(); closeMoreSheet(); break;
+    case 'open-admin': openAdminModal(); closeMoreSheet(); break;
+    case 'delete-admin-food': deleteCustomFood(el.dataset.key); renderAdminModal(); break;
     case 'open-memory': openMemoryDrawer(); closeMoreSheet(); break;
     case 'open-templates': openTemplatesDrawer(); closeMoreSheet(); break;
     case 'more-log-weight': g('logWeightBtn')?.click(); closeMoreSheet(); break;
@@ -1648,11 +1659,164 @@ document.addEventListener('click', (e) => {
   }
 });
 
+
+/* ══════════════════════════════════════════════════════
+   PROFILE MANAGEMENT  (archetype: Profile + Calorie Calculation)
+══════════════════════════════════════════════════════ */
+function readProfileForm(){
+  return normalizeProfile({
+    name:g('profName')?.value, age:g('profAge')?.value, gender:g('profGender')?.value,
+    height:g('profHeight')?.value, weight:g('profWeight')?.value,
+    activity:g('profActivity')?.value, goal:g('profGoal')?.value
+  });
+}
+function renderProfileSummary(p){
+  const el=g('profSummary'); if(!el) return;
+  if(validateProfile(p).length){el.innerHTML='<div class="prof-hint">Fill in age, height and weight to see your targets.</div>';return;}
+  const t=calcTargets(p), bmi=calcBMI(p);
+  el.innerHTML=`
+    <div class="prof-grid">
+      <div><span>BMR</span><b>${t.bmr}</b><i>kcal</i></div>
+      <div><span>TDEE</span><b>${t.tdee}</b><i>kcal</i></div>
+      <div><span>Target</span><b>${t.cal}</b><i>kcal</i></div>
+      <div><span>BMI</span><b>${bmi.toFixed(1)}</b><i>${bmiCategory(bmi)}</i></div>
+    </div>
+    <div class="prof-hint">Macros: ${t.prot}g protein · ${t.carb}g carbs · ${t.fat}g fat</div>`;
+}
+function openProfileModal(){
+  const act=g('profActivity'), goal=g('profGoal');
+  if(act&&!act.options.length) act.innerHTML=ACTIVITY_LEVELS.map(a=>`<option value="${a.value}">${a.label}</option>`).join('');
+  if(goal&&!goal.options.length) goal.innerHTML=Object.entries(GOAL_TYPES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  setVal('profName',profile.name); setVal('profAge',profile.age||''); setVal('profGender',profile.gender);
+  setVal('profHeight',profile.height||''); setVal('profWeight',profile.weight||'');
+  setVal('profActivity',profile.activity); setVal('profGoal',profile.goal);
+  renderProfileSummary(profile);
+  g('profileModal')?.classList.add('open');
+}
+function saveProfile(){
+  const p=readProfileForm(), errs=validateProfile(p);
+  if(errs.length){showToast(errs[0],'warn');return null;}
+  profile=p; _save('nutrilog_profile',profile);
+  return p;
+}
+['profName','profAge','profGender','profHeight','profWeight','profActivity','profGoal'].forEach(id=>{
+  g(id)?.addEventListener('input',()=>renderProfileSummary(readProfileForm()));
+});
+g('profileBtn')?.addEventListener('click',openProfileModal);
+g('closeProfileModal')?.addEventListener('click',()=>g('profileModal')?.classList.remove('open'));
+g('saveProfileBtn')?.addEventListener('click',()=>{ if(saveProfile()) showToast('Profile saved ✓'); });
+g('applyProfileBtn')?.addEventListener('click',()=>{
+  const p=saveProfile(); if(!p) return;
+  const t=calcTargets(p);
+  goals={cal:t.cal,prot:t.prot,carb:t.carb,fat:t.fat};
+  _save('nutrilog_goals',goals);
+  g('profileModal')?.classList.remove('open');
+  updateTotals();
+  showToast(`Profile saved — goal set to ${t.cal} kcal ✓`);
+});
+
+/* ══════════════════════════════════════════════════════
+   PROGRESS REPORTS  (archetype: Progress & Reporting)
+══════════════════════════════════════════════════════ */
+let reportDays=7;
+function currentReport(){ return buildReport({history,todayEntries:logEntries,goals,days:reportDays}); }
+function renderReport(){
+  const el=g('reportBody'); if(!el) return;
+  const r=currentReport(), wc=weightChange(bodyWeight,reportDays);
+  if(!r.loggedDays){el.innerHTML='<div class="rep-empty">No meals logged in this period yet.</div>';return;}
+  const max=Math.max(goals.cal,...r.rows.map(x=>x.cal),1);
+  const bars=r.rows.map(x=>{
+    const h=Math.round((x.cal/max)*100);
+    const cls=!x.logged?'none':Math.abs(x.cal-goals.cal)<=goals.cal*0.1?'ok':x.cal>goals.cal?'over':'under';
+    return `<div class="rep-col" title="${x.date}: ${Math.round(x.cal)} kcal"><div class="rep-bar ${cls}" style="height:${Math.max(h,x.logged?3:0)}%"></div></div>`;
+  }).join('');
+  const goalPos=Math.round((goals.cal/max)*100);
+  const diff=r.vsGoal;
+  el.innerHTML=`
+    <div class="rep-cards">
+      <div class="rep-card"><span>Avg calories</span><b>${r.avg.cal}</b><i>${diff===0?'on goal':(diff>0?'+':'')+diff+' vs goal'}</i></div>
+      <div class="rep-card"><span>Days logged</span><b>${r.loggedDays}/${r.days}</b><i>${r.onTargetDays} within ±10% of goal</i></div>
+      <div class="rep-card"><span>Weight change</span><b>${wc===null?'—':(wc>0?'+':'')+wc+'kg'}</b><i>${wc===null?'log 2+ weigh-ins':'over '+r.days+' days'}</i></div>
+    </div>
+    <div class="rep-chart"><div class="rep-goal-line" style="bottom:${goalPos}%"><span>${goals.cal}</span></div>${bars}</div>
+    <div class="rep-legend"><span class="ok">on target</span><span class="over">over</span><span class="under">under</span></div>
+    <div class="rep-macros-title">Average daily macros</div>
+    <div class="rep-macros">
+      <div class="rep-mrow"><span>Protein</span><div><i class="p" style="width:${r.split.prot}%"></i></div><b>${r.avg.prot}g · ${r.split.prot}%</b></div>
+      <div class="rep-mrow"><span>Carbs</span><div><i class="c" style="width:${r.split.carb}%"></i></div><b>${r.avg.carb}g · ${r.split.carb}%</b></div>
+      <div class="rep-mrow"><span>Fat</span><div><i class="f" style="width:${r.split.fat}%"></i></div><b>${r.avg.fat}g · ${r.split.fat}%</b></div>
+    </div>`;
+}
+function openReportsDrawer(){renderReport();g('reportsDrawer')?.classList.add('open');g('reportsOverlay')?.classList.add('open');}
+function closeReportsDrawer(){g('reportsDrawer')?.classList.remove('open');g('reportsOverlay')?.classList.remove('open');}
+g('reportsBtn')?.addEventListener('click',openReportsDrawer);
+g('closeReports')?.addEventListener('click',closeReportsDrawer);
+g('reportsOverlay')?.addEventListener('click',closeReportsDrawer);
+document.querySelectorAll('.rep-range-btn[data-days]').forEach(b=>b.addEventListener('click',()=>{
+  reportDays=+b.dataset.days;
+  document.querySelectorAll('.rep-range-btn[data-days]').forEach(x=>x.classList.toggle('active',x===b));
+  renderReport();
+}));
+g('reportCsvBtn')?.addEventListener('click',()=>{
+  const blob=new Blob([reportToCSV(currentReport())],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`nutritrack-report-${todayKey()}.csv`;a.click();URL.revokeObjectURL(url);
+  showToast('Report exported ✓');
+});
+
+/* ══════════════════════════════════════════════════════
+   DATA & ADMIN  (archetypes: Administration + Data Management)
+══════════════════════════════════════════════════════ */
+function storageUsageBytes(){
+  let n=0;
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&(k.startsWith('nutrilog_')||k==='nutriMemory')) n+=(k.length+(localStorage.getItem(k)||'').length)*2;
+  }
+  return n;
+}
+function renderAdminModal(){
+  const used=storageUsageBytes(), quota=5*1024*1024, pct=Math.min(100,Math.round(used/quota*100));
+  const stat=(l,v)=>`<div class="admin-stat"><span>${l}</span><b>${v}</b></div>`;
+  const s=g('adminStats');
+  if(s) s.innerHTML=
+    stat('Days archived',Object.keys(history).length)+
+    stat('Custom foods',Object.keys(USER_DB).length)+
+    stat('Templates',Object.keys(mealTemplates).length)+
+    stat('Weigh-ins',bodyWeight.length)+
+    stat('Foods in database',Object.keys(getAllFoods()).length)+
+    `<div class="admin-stat admin-storage"><span>Browser storage</span><b>${(used/1024).toFixed(1)} KB (${pct}%)</b><div class="admin-meter"><i style="width:${pct}%"></i></div></div>`;
+  const f=g('adminFoods'); if(!f) return;
+  const keys=Object.keys(USER_DB);
+  f.innerHTML=keys.length
+    ? keys.map(k=>`<div class="admin-food"><span>${escHtml(USER_DB[k].name)} <em>${USER_DB[k].cal} kcal / ${USER_DB[k].base}${USER_DB[k].unit}</em></span><button class="ie-btn" data-action="delete-admin-food" data-key="${escHtml(k)}">Delete</button></div>`).join('')
+    : '<div class="rep-empty">No custom foods yet.</div>';
+}
+function openAdminModal(){renderAdminModal();g('adminModal')?.classList.add('open');}
+g('adminBtn')?.addEventListener('click',openAdminModal);
+g('closeAdminModal')?.addEventListener('click',()=>g('adminModal')?.classList.remove('open'));
+g('adminExportBtn')?.addEventListener('click',()=>g('exportBtn')?.click());
+g('adminClearHistoryBtn')?.addEventListener('click',()=>{
+  if(!Object.keys(history).length){showToast('History is already empty','warn');return;}
+  if(!confirm('Delete all archived days? Today\'s log is kept.')) return;
+  history={}; _save('nutrilog_history',history); renderAdminModal(); showToast('History cleared','warn');
+});
+g('adminResetBtn')?.addEventListener('click',()=>{
+  if(!confirm('Erase ALL NutriTrack data on this device? This cannot be undone.')) return;
+  const del=[];
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith('nutrilog_')||k==='nutriMemory'))del.push(k);}
+  del.forEach(k=>localStorage.removeItem(k));
+  _resetting=true;
+  location.reload();
+});
+
 /* ══════════════════════════════════════════════════════
    STORAGE SAFETY NET
    Saves all state on: hide, pagehide, beforeunload, + every 60s
 ══════════════════════════════════════════════════════ */
+let _resetting=false;
 function saveAllState(){
+  if(_resetting) return;
   _save('nutrilog_log_today',logEntries);
   localStorage.setItem('nutrilog_water_today',waterMl);
   localStorage.setItem('nutrilog_burned_today',caloriesBurned);
@@ -1665,6 +1829,7 @@ function saveAllState(){
   _save('nutrilog_portion_memory',portionMemory);
   _save('nutrilog_meal_templates',mealTemplates);
   _save('nutrilog_bodyweight',bodyWeight);
+  _save('nutrilog_profile',profile);
   localStorage.setItem('nutrilog_curmeal',currentMeal);
   localStorage.setItem('nutrilog_theme',theme);
   localStorage.setItem('nutrilog_watergoal',waterGoal);
