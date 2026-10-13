@@ -1257,6 +1257,7 @@ function persistProfile(p){
   _save('nutrilog_profile', profile);
 }
 function openGoalsModal(){
+  refreshDataAdminSummary();
   setVal('goalCalInput',goals.cal);setVal('goalProtInput',goals.prot);
   setVal('goalCarbInput',goals.carb);setVal('goalFatInput',goals.fat);
   setVal('goalWaterInput',waterGoal);
