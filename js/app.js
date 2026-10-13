@@ -19,6 +19,7 @@ function persistUserDB() { _save('nutrilog_userfoods', USER_DB); foodMemory.setU
 
 /* ─── Persistent state ─────────────────────────────── */
 let goals        = _load('nutrilog_goals')        || { cal:2000, prot:150, carb:250, fat:65 };
+let profile      = _load('nutrilog_profile')      || { age:'', weight:'', height:'', gender:'male', activity:'1.55', goalMode:'maintain' };
 let savedFoods   = _load('nutrilog_savedfoods')   || _load('nutriMemory') || [];
 let recentFoods  = _load('nutrilog_recents')      || [];
 let history      = _load('nutrilog_history')      || {};   // { "YYYY-MM-DD": [entries] }
@@ -1137,12 +1138,53 @@ g('goalsBtn')?.addEventListener('click',openGoalsModal);
 g('editGoalsQuickBtn')?.addEventListener('click', openGoalsModal);
 g('closeGoalsModal')?.addEventListener('click',()=>g('goalsModal')?.classList.remove('open'));
 g('goalsModal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
+function fillProfileFields(){
+  setVal('tdeeAge',profile.age ?? '');
+  setVal('tdeeWeight',profile.weight ?? '');
+  setVal('tdeeHeight',profile.height ?? '');
+  setVal('tdeeGender',profile.gender || 'male');
+  setVal('tdeeActivity',String(profile.activity || '1.55'));
+  setVal('profileGoalMode',profile.goalMode || 'maintain');
+}
+function readProfileFields(){
+  return {
+    age: Number(g('tdeeAge')?.value),
+    weight: Number(g('tdeeWeight')?.value),
+    height: Number(g('tdeeHeight')?.value),
+    gender: g('tdeeGender')?.value || 'male',
+    activity: Number(g('tdeeActivity')?.value),
+    goalMode: g('profileGoalMode')?.value || 'maintain'
+  };
+}
+function validateProfile(p){
+  if(!Number.isInteger(p.age) || p.age < 13 || p.age > 100) return 'Enter an age between 13 and 100.';
+  if(!Number.isFinite(p.weight) || p.weight < 25 || p.weight > 350) return 'Enter a weight between 25 and 350 kg.';
+  if(!Number.isFinite(p.height) || p.height < 100 || p.height > 250) return 'Enter a height between 100 and 250 cm.';
+  if(!Number.isFinite(p.activity) || ![1.2,1.375,1.55,1.725,1.9].includes(p.activity)) return 'Choose a valid activity level.';
+  if(!['male','female'].includes(p.gender)) return 'Choose a valid calculation equation.';
+  if(!['maintain','lose','gain'].includes(p.goalMode)) return 'Choose a valid goal.';
+  return '';
+}
+function persistProfile(p){
+  profile = { ...p };
+  _save('nutrilog_profile', profile);
+}
 function openGoalsModal(){
   setVal('goalCalInput',goals.cal);setVal('goalProtInput',goals.prot);
   setVal('goalCarbInput',goals.carb);setVal('goalFatInput',goals.fat);
   setVal('goalWaterInput',waterGoal);
+  fillProfileFields();
+  setText('tdeResult','');
   g('goalsModal')?.classList.add('open');
 }
+g('saveProfileBtn')?.addEventListener('click',()=>{
+  const next = readProfileFields();
+  const error = validateProfile(next);
+  if(error){showToast(error,'warn');return;}
+  persistProfile(next);
+  showToast('Profile saved on this device ✓');
+});
+
 g('saveGoalsBtn')?.addEventListener('click',()=>{
   goals.cal=Math.max(1,parseInt(g('goalCalInput').value)||2000);
   goals.prot=Math.max(1,parseInt(g('goalProtInput').value)||150);
@@ -1157,16 +1199,32 @@ g('saveGoalsBtn')?.addEventListener('click',()=>{
   setText('goalFatLbl',  goals.fat  + 'g');
   showToast('Goals saved ✓');
 });
+function calculateProfileNeeds(p){
+  const bmr = p.gender === 'male'
+    ? 10 * p.weight + 6.25 * p.height - 5 * p.age + 5
+    : 10 * p.weight + 6.25 * p.height - 5 * p.age - 161;
+  const tdee = Math.round(bmr * p.activity);
+  const adjustment = p.goalMode === 'lose' ? -300 : p.goalMode === 'gain' ? 250 : 0;
+  const target = Math.max(1, tdee + adjustment);
+  const protein = Math.round(p.weight * 1.6);
+  const fat = Math.round(target * 0.25 / 9);
+  const carbs = Math.max(0, Math.round((target - protein * 4 - fat * 9) / 4));
+  return { bmr: Math.round(bmr), tdee, target, protein, carbs, fat, adjustment };
+}
 g('calcTDEEBtn')?.addEventListener('click',()=>{
-  const age=parseInt(g('tdeeAge')?.value),wt=parseFloat(g('tdeeWeight')?.value),ht=parseFloat(g('tdeeHeight')?.value);
-  const gender=g('tdeeGender')?.value,activ=parseFloat(g('tdeeActivity')?.value);
-  if(!age||!wt||!ht){showToast('Fill all TDEE fields','warn');return;}
-  const bmr=gender==='male'?10*wt+6.25*ht-5*age+5:10*wt+6.25*ht-5*age-161;
-  const tdee=Math.round(bmr*activ);
-  setVal('goalCalInput',tdee);setVal('goalProtInput',Math.round(wt*1.8));
-  setVal('goalCarbInput',Math.round(tdee*0.40/4));setVal('goalFatInput',Math.round(tdee*0.30/9));
-  setText('tdeResult',`TDEE: ${tdee} kcal (BMR: ${Math.round(bmr)})`);
-  showToast(`TDEE: ${tdee} kcal — goals filled ✓`);
+  const next = readProfileFields();
+  const error = validateProfile(next);
+  if(error){showToast(error,'warn');return;}
+  persistProfile(next);
+  const result = calculateProfileNeeds(next);
+  setVal('goalCalInput',result.target);
+  setVal('goalProtInput',result.protein);
+  setVal('goalCarbInput',result.carbs);
+  setVal('goalFatInput',result.fat);
+  const goalLabel = next.goalMode === 'lose' ? 'weight-loss target' : next.goalMode === 'gain' ? 'weight-gain target' : 'maintenance target';
+  const adjustmentLabel = result.adjustment === 0 ? 'no adjustment' : result.adjustment > 0 ? '+' + result.adjustment + ' kcal/day' : result.adjustment + ' kcal/day';
+  setText('tdeResult',`BMR ${result.bmr} kcal · Maintenance ${result.tdee} kcal · ${goalLabel}: ${result.target} kcal (${adjustmentLabel})`);
+  showToast('Estimated needs calculated. Review and select Save Goals to apply them.');
 });
 
 /* ══════════════════════════════════════════════════════
@@ -1392,7 +1450,8 @@ g('saveWeightBtn')?.addEventListener('click',()=>{
   if(!date){showToast('Select a date','warn');return;}
   const filtered=bodyWeight.filter(e=>e.date!==date);filtered.push({date,kg});
   filtered.sort((a,b)=>a.date.localeCompare(b.date));bodyWeight=filtered;
-  _save('nutrilog_bodyweight',bodyWeight);g('weightModal')?.classList.remove('open');
+  _save('nutrilog_bodyweight',bodyWeight);
+  _save('nutrilog_profile',profile);g('weightModal')?.classList.remove('open');
   showToast(`${kg}kg logged ✓`);updateWeightDisplay();renderWeightChart();
 });
 g('cancelWeightBtn')?.addEventListener('click',()=>g('weightModal')?.classList.remove('open'));
@@ -1430,7 +1489,7 @@ function renderWeightChart(){
    EXPORT / IMPORT
 ══════════════════════════════════════════════════════ */
 g('exportBtn')?.addEventListener('click',()=>{
-  const data={version:3,exported:new Date().toISOString(),goals,waterGoal,mealGroups,savedFoods,history,userFoods:USER_DB,recents:recentFoods,templates:mealTemplates,bodyWeight,streak:streakData,
+  const data={version:3,exported:new Date().toISOString(),profile,goals,waterGoal,mealGroups,savedFoods,history,userFoods:USER_DB,recents:recentFoods,templates:mealTemplates,bodyWeight,streak:streakData,
     today:{date:todayKey(),entries:logEntries,waterMl,burned:caloriesBurned}};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`nutritrack-${todayKey()}.json`;a.click();URL.revokeObjectURL(url);showToast('Data exported ✓');
@@ -1443,6 +1502,10 @@ g('importFile')?.addEventListener('change',function(e){
     try{
       const data=JSON.parse(ev.target.result);if(!data.version)throw new Error('Invalid file');
       if(!confirm('Import will merge with current data. Continue?'))return;
+      if(data.profile && typeof data.profile==='object'){
+        const importedProfile={...profile,...data.profile};
+        if(!validateProfile(importedProfile).length){persistProfile(importedProfile);}
+      }
       if(data.goals)Object.assign(goals,data.goals);_save('nutrilog_goals',goals);
       if(data.waterGoal){waterGoal=data.waterGoal;localStorage.setItem('nutrilog_watergoal',waterGoal);}
       if(data.savedFoods){savedFoods=data.savedFoods;persistMemory();}
