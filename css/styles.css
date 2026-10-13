@@ -907,6 +907,11 @@ input[type="number"]::-webkit-inner-spin-button { opacity:.4; }
 .toggle-row input { width:18px; height:18px; accent-color:var(--accent); }
 
 .tdee-section { border:var(--bw) solid var(--rule); border-radius:var(--r-sm); padding:14px; margin-bottom:16px; background:var(--paper); }
+.profile-intro { margin:0 0 14px; color:var(--ink-2); font-size:.82rem; line-height:1.5; }
+.profile-actions { justify-content:flex-start; }
+.profile-result { margin-top:12px; line-height:1.6; overflow-wrap:anywhere; }
+.profile-disclaimer { margin:10px 0 0; color:var(--ink-3); font-size:.7rem; line-height:1.5; }
+.profile-section .form-group input, .profile-section .form-group select { min-height:40px; }
 .tdee-title { display:flex; align-items:center; gap:8px; font-weight:900; font-stretch:80%; text-transform:uppercase; font-size:1rem; margin-bottom:12px; flex-wrap:wrap; }
 .tdee-title svg { width:16px; height:16px; color:var(--accent); }
 .tdee-sub { font-family:var(--mono); font-size:.62rem; font-weight:400; color:var(--ink-3); text-transform:none; letter-spacing:0; }
