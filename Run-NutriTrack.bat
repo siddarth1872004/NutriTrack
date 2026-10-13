@@ -3,6 +3,21 @@ setlocal
 cd /d "%~dp0"
 title NutriTrack Local
 where py >nul 2>nul
-if %errorlevel%==0 (py -3 server.py) else (python server.py)
-if errorlevel 1 (echo If Python is missing, install Python 3.10+ and enable Add Python to PATH. & pause)
+if not errorlevel 1 goto use_py
+where python >nul 2>nul
+if not errorlevel 1 goto use_python
+echo Python 3.10 or newer is required.
+echo Install it from https://www.python.org/downloads/ and enable Add Python to PATH.
+pause
+exit /b 1
+:use_py
+py -3 server.py
+goto done
+:use_python
+python server.py
+:done
+if errorlevel 1 (
+  echo NutriTrack stopped with an error. Read the message above.
+  pause
+)
 endlocal
