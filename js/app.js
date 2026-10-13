@@ -1759,6 +1759,9 @@ document.addEventListener('click', (e) => {
     case 'clear-recents': clearRecents(); break;
     case 'apply-filter': applyFilter(el.dataset.filter || ''); break;
     case 'toggle-meal': toggleMealCollapse(el.dataset.meal || ''); break;
+    case 'reset-log-filters':
+      logFilter='';if(g('logSearchInput'))g('logSearchInput').value='';
+      if(g('logMealFilter'))g('logMealFilter').value='all';renderLog();break;
     case 'edit-entry-note': editEntryNote(+el.dataset.entryId); break;
     case 'duplicate-entry': duplicateEntry(+el.dataset.entryId); break;
     case 'edit-entry-portion': editEntryPortion(+el.dataset.entryId); break;
