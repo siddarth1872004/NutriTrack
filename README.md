@@ -135,3 +135,11 @@ NutriTrack is a static site, so GitHub Pages can serve it straight from the repo
 ## License
 
 Distributed under the **MIT License**. See `LICENSE` for details.
+
+
+## Phase 4 — Data administration and security boundary
+
+- **Local data administration:** inspect an estimate of NutriTrack's local storage footprint and counts for saved foods, custom foods, history days, meal templates, and weight records.
+- **Safer backup import:** reject unsupported backup versions and malformed records, validate profile/goals and food totals before applying data, cap import files at 10 MB, and show a merge confirmation.
+- **Explicit data erasure:** permanently clear NutriTrack-prefixed local-storage keys only after two confirmations.
+- **Authentication boundary:** this repository is a static, client-only app. A login form or administrator role enforced only in JavaScript or LocalStorage is not real authentication and can be bypassed by anyone with browser access. No fake credentials or insecure admin role were added. Real multi-user authentication and server-enforced authorization require a trusted identity provider/backend and server-side data access rules; that would change the existing no-backend, device-local architecture.
