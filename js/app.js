@@ -637,7 +637,17 @@ document.addEventListener('keydown',e=>{
    RENDER LOG
 ══════════════════════════════════════════════════════ */
 let logFilter='';
-g('logSearchInput')?.addEventListener('input',function(){logFilter=this.value.toLowerCase();renderLog();});
+g('logSearchInput')?.addEventListener('input',function(){logFilter=this.value.trim().toLowerCase();renderLog();});
+g('clearLogSearchBtn')?.addEventListener('click',()=>{const input=g('logSearchInput');if(input)input.value='';logFilter='';renderLog();input?.focus();});
+g('logMealFilter')?.addEventListener('change',renderLog);
+g('logSortOrder')?.addEventListener('change',renderLog);
+
+function renderLogMealFilter(){
+  const sel=g('logMealFilter');if(!sel)return;
+  const selected=sel.value||'all';
+  sel.innerHTML='<option value="all">All meals</option>'+[...mealGroups,'Other'].map(m=>`<option value="${escAttr(m)}">${escHtml(m)}</option>`).join('');
+  sel.value=[...mealGroups,'Other'].includes(selected)?selected:'all';
+}
 
 function toggleMealCollapse(meal){
   if(collapsedMeals.has(meal))collapsedMeals.delete(meal);else collapsedMeals.add(meal);
@@ -648,18 +658,37 @@ window.toggleMealCollapse=toggleMealCollapse;
 function renderLog() {
   const logEntEl=g('logEntries'); if(!logEntEl) return;
   updateMobLogBadge?.();
-  const filtered=logFilter?logEntries.filter(e=>e.name.toLowerCase().includes(logFilter)||e.meal?.toLowerCase().includes(logFilter)):logEntries;
+  renderLogMealFilter();
+  const mealFilter=g('logMealFilter')?.value||'all';
+  const sortOrder=g('logSortOrder')?.value||'default';
+  const filtered=logEntries.filter(e=>{
+    const matchesText=!logFilter||[e.name,e.meal,e.portion,e.note].some(v=>String(v||'').toLowerCase().includes(logFilter));
+    const matchesMeal=mealFilter==='all'||(mealFilter==='Other'?!mealGroups.includes(e.meal):e.meal===mealFilter);
+    return matchesText&&matchesMeal;
+  });
   if(!filtered.length&&!logEntries.length){
     logEntEl.innerHTML=`<div class="log-empty"><div class="log-empty-icon"></div><div class="log-empty-title">Nothing logged yet</div><div class="log-empty-sub">Press <kbd>/</kbd> or <kbd>Ctrl+K</kbd> to search</div></div>`;return;
   }
-  if(!filtered.length){logEntEl.innerHTML=`<div class="log-empty"><div class="log-empty-title">No entries match "${escHtml(logFilter)}"</div></div>`;return;}
+  if(!filtered.length){
+    const hasFilters=Boolean(logFilter)||mealFilter!=='all';
+    logEntEl.innerHTML=`<div class="log-empty"><div class="log-empty-title">${hasFilters?'No entries match your filters':'Nothing logged yet'}</div><div class="log-empty-sub">${hasFilters?'Clear the search or choose All meals to see more entries.':'Search for a food to get started.'}</div>${hasFilters?'<button type="button" class="log-reset-filters" data-action="reset-log-filters">Clear filters</button>':''}</div>`;
+    return;
+  }
 
   const groups=Object.fromEntries([...mealGroups,'Other'].map(m=>[m,[]]));
   filtered.forEach(e=>{const g2=mealGroups.includes(e.meal)?e.meal:'Other';groups[g2].push(e);});
+  const sortEntries=entries=>{
+    const copy=[...entries];
+    if(sortOrder==='name')copy.sort((a,b)=>a.name.localeCompare(b.name));
+    else if(sortOrder==='cal-desc')copy.sort((a,b)=>b.cal-a.cal);
+    else if(sortOrder==='cal-asc')copy.sort((a,b)=>a.cal-b.cal);
+    else if(sortOrder==='protein-desc')copy.sort((a,b)=>b.prot-a.prot);
+    return copy;
+  };
 
   let html='';
   for(const meal of[...mealGroups,'Other']){
-    const entries=groups[meal]; if(!entries.length) continue;
+    const entries=sortEntries(groups[meal]); if(!entries.length) continue;
     const mc=entries.reduce((s,e)=>s+e.cal,0);
     const mp=+entries.reduce((s,e)=>s+e.prot,0).toFixed(1);
     const mcb=+entries.reduce((s,e)=>s+e.carb,0).toFixed(1);
