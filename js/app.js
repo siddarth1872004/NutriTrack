@@ -988,10 +988,68 @@ g('closeHistory')?.addEventListener('click',closeHistoryDrawer);
 g('historyOverlay')?.addEventListener('click',closeHistoryDrawer);
 
 function openHistoryDrawer(){renderHistoryDrawer();g('historyDrawer')?.classList.add('open');g('historyOverlay')?.classList.add('open');}
+g('analyticsPeriod')?.addEventListener('change',renderAnalyticsReport);
+g('exportReportCsv')?.addEventListener('click',exportAnalyticsCsv);
+g('printReportBtn')?.addEventListener('click',()=>{renderAnalyticsReport();window.print();});
+
+function getAnalyticsDays(){
+  const days={};
+  Object.entries(history).forEach(([date,entries])=>{
+    if(/^\d{4}-\d{2}-\d{2}$/.test(date)&&Array.isArray(entries))days[date]={date,entries,cal:0,prot:0,carb:0,fat:0};
+  });
+  if(logEntries.length){const date=todayKey();days[date]={date,entries:logEntries,cal:0,prot:0,carb:0,fat:0};}
+  return Object.values(days).map(day=>{
+    day.entries.forEach(e=>{day.cal+=Number(e.cal)||0;day.prot+=Number(e.prot)||0;day.carb+=Number(e.carb)||0;day.fat+=Number(e.fat)||0;});
+    day.cal=Math.round(day.cal);day.prot=+day.prot.toFixed(1);day.carb=+day.carb.toFixed(1);day.fat=+day.fat.toFixed(1);
+    return day;
+  }).sort((a,b)=>a.date.localeCompare(b.date));
+}
+function getAnalyticsRange(){
+  const days=getAnalyticsDays(),period=g('analyticsPeriod')?.value||'30';
+  if(period==='all'||!days.length)return days;
+  const cutoff=new Date();cutoff.setHours(0,0,0,0);cutoff.setDate(cutoff.getDate()-(Math.max(1,Number(period)||30)-1));
+  const minDate=toDateKey(cutoff);
+  return days.filter(d=>d.date>=minDate);
+}
+function renderAnalyticsReport(){
+  const summary=g('analyticsSummary'),trend=g('analyticsTrend');if(!summary||!trend)return;
+  const days=getAnalyticsRange();
+  if(!days.length){summary.innerHTML='<div class="analytics-empty">No nutrition data for this period yet. Log meals to start seeing averages, trends and goal progress.</div>';trend.innerHTML='';return;}
+  const avg=key=>days.reduce((s,d)=>s+d[key],0)/days.length;
+  const avgCal=Math.round(avg('cal')),avgProt=avg('prot').toFixed(1),avgCarb=avg('carb').toFixed(1),avgFat=avg('fat').toFixed(1);
+  const onTarget=days.filter(d=>goals.cal>0&&d.cal>=goals.cal*.9&&d.cal<=goals.cal*1.1).length;
+  const weights=bodyWeight.filter(w=>days[0].date<=w.date&&w.date<=days.at(-1).date).sort((a,b)=>a.date.localeCompare(b.date));
+  const weightChange=weights.length>1?+(weights.at(-1).kg-weights[0].kg).toFixed(1):null;
+  const rangeLabel=days.length===1?days[0].date:days[0].date+' – '+days.at(-1).date;
+  summary.innerHTML=`<div class="analytics-range">${escHtml(rangeLabel)} · ${days.length} logged day${days.length===1?'':'s'}</div>
+    <div class="analytics-metrics">
+      <div class="analytics-metric"><span class="analytics-metric-value">${avgCal.toLocaleString()}</span><span class="analytics-metric-label">Avg kcal/day</span></div>
+      <div class="analytics-metric"><span class="analytics-metric-value">${avgProt}g</span><span class="analytics-metric-label">Avg protein</span></div>
+      <div class="analytics-metric"><span class="analytics-metric-value">${avgCarb}g</span><span class="analytics-metric-label">Avg carbs</span></div>
+      <div class="analytics-metric"><span class="analytics-metric-value">${avgFat}g</span><span class="analytics-metric-label">Avg fat</span></div>
+      <div class="analytics-metric"><span class="analytics-metric-value">${Math.round(onTarget/days.length*100)}%</span><span class="analytics-metric-label">Days near calorie goal</span></div>
+      <div class="analytics-metric"><span class="analytics-metric-value">${weightChange===null?'—':(weightChange>0?'+':'')+weightChange+' kg'}</span><span class="analytics-metric-label">Weight change${weights.length>1?' · '+weights.length+' weigh-ins':''}</span></div>
+    </div>`;
+  trend.innerHTML=`<div class="analytics-trend-title">Recent daily totals</div><div class="analytics-table-wrap"><table class="analytics-table"><thead><tr><th>Date</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Goal</th></tr></thead><tbody>${days.slice(-7).reverse().map(d=>{
+    const pct=goals.cal>0?Math.round(d.cal/goals.cal*100):0,label=new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    return `<tr><td>${label}</td><td>${d.cal.toLocaleString()}</td><td>${d.prot}g</td><td>${d.carb}g</td><td>${d.fat}g</td><td>${pct}%</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function exportAnalyticsCsv(){
+  const days=getAnalyticsRange();if(!days.length){showToast('No report data to export','warn');return;}
+  const weightsByDate={};bodyWeight.forEach(w=>{weightsByDate[w.date]=w.kg;});
+  const rows=[['Date','Food entries','Calories (kcal)','Protein (g)','Carbs (g)','Fat (g)','Calorie goal (kcal)','Goal completion (%)','Weight (kg)']];
+  days.forEach(d=>rows.push([d.date,d.entries.length,d.cal,d.prot,d.carb,d.fat,goals.cal,goals.cal>0?Math.round(d.cal/goals.cal*100):'',weightsByDate[d.date]??'']));
+  const csv=rows.map(row=>row.map(value=>{const s=String(value??'');return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\r\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download='nutritrack-report-'+(g('analyticsPeriod')?.value||'30')+'-days-'+todayKey()+'.csv';
+  document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);showToast('Nutrition report exported ✓');
+}
 function closeHistoryDrawer(){g('historyDrawer')?.classList.remove('open');g('historyOverlay')?.classList.remove('open');}
 
 function renderHistoryDrawer() {
   renderCalorieHeatmap();
+  renderAnalyticsReport();
   const list=g('historyList'); if(!list) return;
   const dates=Object.keys(history).sort().reverse();
   if(!dates.length){list.innerHTML=`<div class="log-empty" style="padding:28px 16px">No history yet — come back tomorrow!</div>`;return;}
