@@ -1577,40 +1577,105 @@ function renderWeightChart(){
 /* ══════════════════════════════════════════════════════
    EXPORT / IMPORT
 ══════════════════════════════════════════════════════ */
-g('exportBtn')?.addEventListener('click',()=>{
-  const data={version:3,exported:new Date().toISOString(),profile,goals,waterGoal,mealGroups,savedFoods,history,userFoods:USER_DB,recents:recentFoods,templates:mealTemplates,bodyWeight,streak:streakData,
+function buildExportData(){
+  return {version:3,exported:new Date().toISOString(),profile,goals,waterGoal,mealGroups,savedFoods,history,userFoods:USER_DB,recents:recentFoods,templates:mealTemplates,bodyWeight,streak:streakData,
     today:{date:todayKey(),entries:logEntries,waterMl,burned:caloriesBurned}};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`nutritrack-${todayKey()}.json`;a.click();URL.revokeObjectURL(url);showToast('Data exported ✓');
-});
+}
+function downloadDataBackup(){
+  const blob=new Blob([JSON.stringify(buildExportData(),null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const link=document.createElement('a');
+  link.href=url;link.download=`nutritrack-${todayKey()}.json`;document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showToast('Data backup exported ✓');
+}
+g('exportBtn')?.addEventListener('click',downloadDataBackup);
+
+function isPlainRecord(value){return value!==null&&typeof value==='object'&&!Array.isArray(value);}
+function validNonNegativeNumber(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0;}
+function validateImportPayload(data){
+  if(!isPlainRecord(data)||![1,2,3].includes(Number(data.version)))throw new Error('Unsupported or invalid backup file.');
+  for(const key of ['profile','goals','history','userFoods','templates','streak','today']){
+    if(data[key]!==undefined&&data[key]!==null&&!isPlainRecord(data[key]))throw new Error(`Invalid ${key} data in backup.`);
+  }
+  for(const key of ['savedFoods','bodyWeight','mealGroups','recents']){
+    if(data[key]!==undefined&&!Array.isArray(data[key]))throw new Error(`Invalid ${key} list in backup.`);
+  }
+  if(data.profile){
+    const merged={...profile,...data.profile};
+    const errors=validateProfile(merged);
+    if(errors.length)throw new Error('The profile in this backup is invalid: '+errors.join(' '));
+  }
+  if(data.goals){
+    for(const key of ['cal','prot','carb','fat']){
+      if(data.goals[key]!==undefined&&!validNonNegativeNumber(data.goals[key]))throw new Error('Goal values must be non-negative numbers.');
+    }
+  }
+  if(data.waterGoal!==undefined&&(!Number.isFinite(Number(data.waterGoal))||Number(data.waterGoal)<0||Number(data.waterGoal)>20000))throw new Error('Water goal is outside the allowed range.');
+  if(data.bodyWeight&&!data.bodyWeight.every(v=>isPlainRecord(v)&&typeof v.date==='string'&&Number.isFinite(Number(v.weight))&&Number(v.weight)>0))throw new Error('Weight history contains an invalid entry.');
+  if(data.today){
+    if(data.today.entries!==undefined&&!Array.isArray(data.today.entries))throw new Error('Today’s food log must be a list.');
+    if(data.today.entries&&!data.today.entries.every(e=>isPlainRecord(e)&&typeof e.name==='string'&&['cal','prot','carb','fat'].every(k=>validNonNegativeNumber(e[k]))))throw new Error('Today’s log contains an invalid food entry.');
+    for(const key of ['waterMl','burned'])if(data.today[key]!==undefined&&(!Number.isFinite(Number(data.today[key]))||Number(data.today[key])<0))throw new Error('Today’s water/activity totals are invalid.');
+  }
+  for(const [date,day] of Object.entries(data.history||{})){
+    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||!isPlainRecord(day))throw new Error('History contains an invalid date or day record.');
+    if(day.entries!==undefined&&(!Array.isArray(day.entries)||!day.entries.every(e=>isPlainRecord(e)&&typeof e.name==='string'&&['cal','prot','carb','fat'].every(k=>validNonNegativeNumber(e[k])))))throw new Error('History contains an invalid food entry.');
+  }
+  return data;
+}
 g('importBtn')?.addEventListener('click',()=>g('importFile')?.click());
 g('importFile')?.addEventListener('change',function(e){
   const file=e.target.files?.[0];if(!file)return;
+  if(file.size>10*1024*1024){showToast('Backup is too large (maximum 10 MB).','warn');e.target.value='';return;}
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
-      const data=JSON.parse(ev.target.result);if(!data.version)throw new Error('Invalid file');
-      if(!confirm('Import will merge with current data. Continue?'))return;
-      if(data.profile && typeof data.profile==='object'){
-        const importedProfile={...profile,...data.profile};
-        if(!validateProfile(importedProfile).length){persistProfile(importedProfile);}
-      }
-      if(data.goals)Object.assign(goals,data.goals);_save('nutrilog_goals',goals);
-      if(data.waterGoal){waterGoal=data.waterGoal;localStorage.setItem('nutrilog_watergoal',waterGoal);}
+      const data=validateImportPayload(JSON.parse(ev.target.result));
+      if(!confirm('Import this validated backup and merge it with current data? Export a backup of your current data first if needed.'))return;
+      if(data.profile)persistProfile({...profile,...data.profile});
+      if(data.goals){Object.assign(goals,data.goals);_save('nutrilog_goals',goals);}
+      if(data.waterGoal!==undefined){waterGoal=Number(data.waterGoal);localStorage.setItem('nutrilog_watergoal',String(waterGoal));}
       if(data.savedFoods){savedFoods=data.savedFoods;persistMemory();}
-      if(data.history)Object.assign(history,data.history);_save('nutrilog_history',history);
-      if(data.userFoods)Object.assign(USER_DB,data.userFoods);persistUserDB();
-      if(data.templates)Object.assign(mealTemplates,data.templates);_save('nutrilog_meal_templates',mealTemplates);
+      if(data.history){Object.assign(history,data.history);_save('nutrilog_history',history);}
+      if(data.userFoods){Object.assign(USER_DB,data.userFoods);persistUserDB();}
+      if(data.templates){Object.assign(mealTemplates,data.templates);_save('nutrilog_meal_templates',mealTemplates);}
       if(data.bodyWeight){bodyWeight=[...bodyWeight,...data.bodyWeight].filter((v,i,a)=>a.findIndex(x=>x.date===v.date)===i).sort((a,b)=>a.date.localeCompare(b.date));_save('nutrilog_bodyweight',bodyWeight);}
-      if(data.streak&&data.streak.count>streakData.count)streakData=data.streak;_save('nutrilog_streak',streakData);
-      if(data.today?.entries&&data.today.date===todayKey()){logEntries=data.today.entries;waterMl=data.today.waterMl||0;caloriesBurned=data.today.burned||0;persistLog();localStorage.setItem('nutrilog_water_today',waterMl);localStorage.setItem('nutrilog_burned_today',caloriesBurned);}
-      recomputeTotals();renderLog();updateTotals();updateWaterUI();renderMemoryCount();updateWeightDisplay();renderWeightChart();
-      g('goalsModal')?.classList.remove('open');showToast('Import successful ✓');
+      if(data.streak&&Number(data.streak.count)>Number(streakData.count))streakData=data.streak;
+      _save('nutrilog_streak',streakData);
+      if(data.today?.entries&&data.today.date===todayKey()){logEntries=data.today.entries;waterMl=Number(data.today.waterMl)||0;caloriesBurned=Number(data.today.burned)||0;persistLog();localStorage.setItem('nutrilog_water_today',waterMl);localStorage.setItem('nutrilog_burned_today',caloriesBurned);}
+      if(data.recents)recentFoods=data.recents;
+      recomputeTotals();renderLog();updateTotals();updateWaterUI();renderMemoryCount();updateWeightDisplay();renderWeightChart();refreshDataAdminSummary();
+      g('goalsModal')?.classList.remove('open');showToast('Backup imported successfully ✓');
     }catch(err){showToast('Import failed: '+err.message,'warn');}
-    e.target.value='';
+    finally{e.target.value='';}
   };
+  reader.onerror=()=>{showToast('Could not read the selected backup file.','warn');e.target.value='';};
   reader.readAsText(file);
 });
+
+function refreshDataAdminSummary(){
+  const el=g('dataAdminSummary');if(!el)return;
+  const keyCount=Object.keys(localStorage).filter(k=>k.startsWith('nutrilog_')).length;
+  const historyDays=Object.keys(history||{}).length;
+  const savedFoodCount=Array.isArray(savedFoods)?savedFoods.length:Object.keys(savedFoods||{}).length;
+  const customFoodCount=Object.keys(USER_DB||{}).length;
+  const templateCount=Object.keys(mealTemplates||{}).length;
+  const weightCount=Array.isArray(bodyWeight)?bodyWeight.length:0;
+  const bytes=Object.keys(localStorage).filter(k=>k.startsWith('nutrilog_')).reduce((sum,k)=>sum+k.length+(localStorage.getItem(k)||'').length,0)*2;
+  const fmt=bytes<1024?`${bytes} B`:bytes<1024*1024?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1024/1024).toFixed(2)} MB`;
+  el.innerHTML=[
+    ['Storage keys',keyCount],['Saved foods',savedFoodCount],['Custom foods',customFoodCount],
+    ['History days',historyDays],['Meal templates',templateCount],['Weight records',weightCount],['Estimated local storage',fmt]
+  ].map(([label,value])=>`<div class="data-admin-stat"><span>${escHtml(label)}</span><strong>${escHtml(String(value))}</strong></div>`).join('');
+}
+g('refreshDataAdminBtn')?.addEventListener('click',()=>{refreshDataAdminSummary();showToast('Local data summary refreshed');});
+g('clearAllDataBtn')?.addEventListener('click',()=>{
+  if(!confirm('Erase ALL NutriTrack data stored in this browser? This cannot be undone. Export a backup first if you need one.'))return;
+  if(!confirm('Final confirmation: permanently delete your profile, goals, food logs, history, custom foods, templates and weight records?'))return;
+  Object.keys(localStorage).filter(k=>k.startsWith('nutrilog_')).forEach(k=>localStorage.removeItem(k));
+  location.reload();
+});
+refreshDataAdminSummary();
 
 /* ══════════════════════════════════════════════════════
    COPY LOG TO CLIPBOARD
