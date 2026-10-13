@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.nutritrack/
+.env
+.venv/
+venv/
+.DS_Store
+Thumbs.db
