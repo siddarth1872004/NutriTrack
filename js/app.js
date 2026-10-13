@@ -1451,7 +1451,9 @@ g('saveWeightBtn')?.addEventListener('click',()=>{
   const filtered=bodyWeight.filter(e=>e.date!==date);filtered.push({date,kg});
   filtered.sort((a,b)=>a.date.localeCompare(b.date));bodyWeight=filtered;
   _save('nutrilog_bodyweight',bodyWeight);
-  _save('nutrilog_profile',profile);g('weightModal')?.classList.remove('open');
+  profile = { ...profile, weight: kg };
+  _save('nutrilog_profile',profile);
+  g('weightModal')?.classList.remove('open');
   showToast(`${kg}kg logged ✓`);updateWeightDisplay();renderWeightChart();
 });
 g('cancelWeightBtn')?.addEventListener('click',()=>g('weightModal')?.classList.remove('open'));
@@ -1728,6 +1730,7 @@ function saveAllState(){
   _save('nutrilog_portion_memory',portionMemory);
   _save('nutrilog_meal_templates',mealTemplates);
   _save('nutrilog_bodyweight',bodyWeight);
+  _save('nutrilog_profile',profile);
   localStorage.setItem('nutrilog_curmeal',currentMeal);
   localStorage.setItem('nutrilog_theme',theme);
   localStorage.setItem('nutrilog_watergoal',waterGoal);
