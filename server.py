@@ -184,6 +184,7 @@ class Handler(SimpleHTTPRequestHandler):
         if p=='/dietitian.html' and u['role']!='dietitian':return self.go('/admin.html' if u['role']=='admin' else '/')
         if p=='/recommendations.html' and u['role']!='user':return self.go('/dietitian.html' if u['role']=='dietitian' else '/admin.html')
         if p=='/' and u['role']=='dietitian':return self.go('/dietitian.html')
+        if p=='/' and u['role']=='admin':return self.go('/admin.html')
         if p=='/':self.path='/index.html'
         return super().do_GET()
     def do_POST(self):
