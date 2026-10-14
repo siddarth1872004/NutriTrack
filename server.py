@@ -116,7 +116,15 @@ class Handler(SimpleHTTPRequestHandler):
         return u
     def do_GET(self):
         p=urlparse(self.path).path
-        if p=='/health': return self.json(200,{'status':'ok'})
+        if p=='/health':
+            with connect() as db: db.execute('SELECT 1').fetchone()
+            return self.json(200,{'status':'ok','service':'NutriTrack','database':'ok'})
+        if p=='/api': return self.json(200,{'name':'NutriTrack API','version':'1.0','health':'/health','endpoints':{
+            'auth':{'signup':'POST /auth/signup','login':'POST /auth/login','logout':'GET /auth/logout','current_user':'GET /api/me'},
+            'admin':{'overview':'GET /api/admin/overview','create_user':'POST /api/admin/users','assignment':'POST /api/admin/assignments','user_actions':'POST /api/admin/users/{username}/{disable|enable|role|delete}'},
+            'dietitian':{'clients':'GET /api/dietitian/clients','client':'GET /api/dietitian/clients/{username}','recommendation':'POST /api/dietitian/recommendations'},
+            'user':{'nutrition_snapshot':'POST /api/my-data','recommendations':'GET /api/my-recommendations'}
+        }})
         if p=='/api/me':
             u=session(self)
             if not u:return self.json(401,{'error':'Sign in required'})
@@ -200,6 +208,7 @@ class Handler(SimpleHTTPRequestHandler):
             if u['role']!='dietitian':return self.json(403,{'error':'Dietitian account required'})
             try:data=json.loads(raw or b'{}')
             except (json.JSONDecodeError,UnicodeDecodeError):return self.json(400,{'error':'Invalid JSON'})
+            if not isinstance(data,dict):return self.json(400,{'error':'JSON body must be an object'})
             name=str(data.get('username','')).strip()
             message=str(data.get('message','')).strip()
             if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.json(400,{'error':'Invalid username'})
@@ -227,6 +236,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not actor:return
             try:data=json.loads(raw or b'{}')
             except (json.JSONDecodeError,UnicodeDecodeError):return self.json(400,{'error':'Invalid JSON'})
+            if not isinstance(data,dict):return self.json(400,{'error':'JSON body must be an object'})
             if p=='/api/admin/users':
                 name=str(data.get('username','')).strip(); pw=str(data.get('password','')); role=data.get('role','user')
                 if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.json(400,{'error':'Username must be 3–40 letters, numbers, dots, underscores or hyphens'})
