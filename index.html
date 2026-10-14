@@ -747,7 +747,8 @@
   const name = document.getElementById("accountName"), role = document.getElementById("accountRole");
   if (name) name.textContent = user.username;
   if (role) role.textContent = user.role === "admin" ? "ADMIN" : "USER";
-  if (user.role !== "user") { location.href = user.role === "dietitian" ? "/dietitian.html" : "/admin.html"; return; }
+  if (user.role === "dietitian") { location.href = "/dietitian.html"; return; }
+  if (user.role === "admin") { await import("./js/app.js?v=2.5.0"); return; }
   const prefix = "nutritrack_account:" + user.username + ":";
   const relevant = key => key.startsWith("nutrilog_") || key === "nutriMemory";
   const current = () => Object.keys(localStorage).filter(relevant);
@@ -766,7 +767,9 @@
     syncing = true;
     try {
       const snapshot = {};
-      current().forEach(key => { const value = localStorage.getItem(key); snapshot[key] = value; localStorage.setItem(prefix + key, value); });
+      const liveKeys = current();
+      liveKeys.forEach(key => { const value = localStorage.getItem(key); snapshot[key] = value; localStorage.setItem(prefix + key, value); });
+      Object.keys(localStorage).filter(key => key.startsWith(prefix) && !liveKeys.includes(key.slice(prefix.length))).forEach(key => localStorage.removeItem(key));
       await fetch("/api/my-data", { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(snapshot) });
     } catch (error) { console.warn("Nutrition sync deferred", error); }
     finally { syncing = false; }
