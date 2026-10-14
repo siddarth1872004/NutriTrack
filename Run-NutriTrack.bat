@@ -11,9 +11,13 @@ echo Install it from https://www.python.org/downloads/ and enable Add Python to 
 pause
 exit /b 1
 :use_py
+py -3 server.py --ensure-admin
+if errorlevel 1 goto done
 py -3 server.py
 goto done
 :use_python
+python server.py --ensure-admin
+if errorlevel 1 goto done
 python server.py
 :done
 if errorlevel 1 (
