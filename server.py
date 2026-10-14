@@ -66,7 +66,12 @@ def auth_page(mode, error=''):
     switch = ('Already have an account? <a href="/login">Sign in</a>' if signup else 'New user? <a href="/signup">Create an account</a>')
     html = '''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>'''+title+'''</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f2ec;color:#222;font:16px system-ui;padding:20px}main{width:min(100%,440px);padding:30px;background:white;border:1px solid #ddd;border-radius:16px;box-shadow:0 18px 55px #0000000d}.brand{font-size:2rem;font-weight:900;letter-spacing:-.06em}.brand span{color:#ff4d1a}p{color:#666;line-height:1.5}label{display:block;margin-top:16px;font-size:.9rem;font-weight:650}input{display:block;width:100%;padding:12px;margin-top:6px;border:1px solid #bbb;border-radius:8px;font:inherit}button{width:100%;padding:13px;margin-top:22px;background:#222;color:white;border:0;border-radius:8px;font:inherit;font-weight:750;cursor:pointer}.err{color:#a21d17;background:#fff0ed;padding:10px;border-radius:8px}.hint{font-size:.78rem}.switch{margin-top:20px;font-size:.9rem}a{color:#b83712;font-weight:700}</style></head><body><main><div class="brand">NutriTrack<span>.</span></div><h1>'''+title+'''</h1><p>'''+('Create a standard user account. Administrator and dietitian access can only be granted by an administrator.' if signup else 'Sign in with the account created for you. Administrator and dietitian accounts are provisioned separately.')+'''</p>'''+err+'''<form method="post" action="'''+action+'''"><label>Username<input name="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.-]+" required autocomplete="username"></label><label>Password<input name="password" type="password" minlength="12" maxlength="256" required autocomplete="'''+('new-password' if signup else 'current-password')+'''"></label>'''+confirm+'''<button>'''+('Create user account' if signup else 'Sign in')+'''</button></form><p class="switch">'''+switch+'''</p><p class="hint">Local NutriTrack account. Use a unique password of at least 12 characters.</p></main></body></html>'''
     return html.encode()
-def session(handler):
+
+def admin_setup_page(error=''):
+    err = '<p class="err">'+esc(error)+'</p>' if error else ''
+    html = '''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NutriTrack Admin Setup</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f2ec;color:#222;font:16px system-ui;padding:20px}main{width:min(100%,460px);padding:30px;background:white;border:1px solid #ddd;border-radius:16px;box-shadow:0 18px 55px #0000000d}.brand{font-size:2rem;font-weight:900;letter-spacing:-.06em}.brand span{color:#ff4d1a}p{color:#666;line-height:1.5}label{display:block;margin-top:16px;font-size:.9rem;font-weight:650}input{display:block;width:100%;padding:12px;margin-top:6px;border:1px solid #bbb;border-radius:8px;font:inherit}button{width:100%;padding:13px;margin-top:22px;background:#222;color:white;border:0;border-radius:8px;font:inherit;font-weight:750;cursor:pointer}.err{color:#a21d17;background:#fff0ed;padding:10px;border-radius:8px}a{color:#b83712;font-weight:700}</style></head><body><main><div class="brand">NutriTrack<span>.</span></div><h1>First-time admin setup</h1><p>Create the administrator account for this local NutriTrack installation. This page works only while no active administrator exists.</p>'''+err+'''<form method="post" action="/auth/admin-setup"><label>Admin username<input name="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.-]+" required autocomplete="username"></label><label>Password (at least 12 characters)<input name="password" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label><label>Confirm password<input name="confirm" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label><button>Create administrator</button></form><p><a href="/login">Back to sign in</a></p></main></body></html>'''
+    return html.encode()
+\ndef session(handler):
     c=http.cookies.SimpleCookie()
     try: c.load(handler.headers.get('Cookie','')); token=c[COOKIE].value
     except (http.cookies.CookieError, KeyError): return None
@@ -116,6 +121,11 @@ class Handler(SimpleHTTPRequestHandler):
         return u
     def do_GET(self):
         p=urlparse(self.path).path
+        if p=='/admin-setup':
+            with connect() as db:
+                exists=db.execute("SELECT 1 FROM users WHERE role='admin' AND active=1 LIMIT 1").fetchone()
+            if exists:return self.send_bytes(403,admin_setup_page('An active administrator already exists. Sign in or use the existing account.'),'text/html; charset=utf-8')
+            return self.send_bytes(200,admin_setup_page(),'text/html; charset=utf-8')
         if p=='/health':
             with connect() as db: db.execute('SELECT 1').fetchone()
             return self.json(200,{'status':'ok','service':'NutriTrack','database':'ok'})
@@ -290,6 +300,21 @@ class Handler(SimpleHTTPRequestHandler):
             return self.json(404,{'error':'Not found'})
         form=parse_qs(raw.decode('utf-8','replace'),keep_blank_values=True)
         name=form.get('username',[''])[0].strip(); pw=form.get('password',[''])[0]; ip=self.client_address[0]
+        if p=='/auth/admin-setup':
+            with connect() as db:
+                exists=db.execute("SELECT 1 FROM users WHERE role='admin' AND active=1 LIMIT 1").fetchone()
+            if exists:return self.send_bytes(403,admin_setup_page('An active administrator already exists. Sign in or use the existing account.'),'text/html; charset=utf-8')
+            if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.send_bytes(400,admin_setup_page('Username must be 3–40 letters, numbers, dots, underscores or hyphens.'),'text/html; charset=utf-8')
+            if len(pw)<12 or len(pw)>256:return self.send_bytes(400,admin_setup_page('Password must be 12–256 characters.'),'text/html; charset=utf-8')
+            if not hmac.compare_digest(pw,form.get('confirm',[''])[0]):return self.send_bytes(400,admin_setup_page('Passwords do not match.'),'text/html; charset=utf-8')
+            salt,digest=derive(pw)
+            try:
+                with connect() as db:
+                    if db.execute("SELECT 1 FROM users WHERE role='admin' AND active=1 LIMIT 1").fetchone():
+                        return self.send_bytes(403,admin_setup_page('An active administrator already exists.'),'text/html; charset=utf-8')
+                    db.execute("INSERT INTO users(username,salt,digest,role,active,created_at) VALUES(?,?,?,'admin',1,CURRENT_TIMESTAMP)",(name,salt,digest))
+            except sqlite3.IntegrityError:return self.send_bytes(409,admin_setup_page('That username already exists; choose another.'),'text/html; charset=utf-8')
+            return self.go('/login')
         if p=='/auth/signup':
             if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.send_bytes(400,auth_page('signup','Username must be 3–40 letters, numbers, dots, underscores or hyphens.'),'text/html; charset=utf-8')
             if len(pw)<12 or len(pw)>256:return self.send_bytes(400,auth_page('signup','Password must be 12–256 characters.'),'text/html; charset=utf-8')
