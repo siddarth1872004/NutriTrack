@@ -25,11 +25,11 @@ def connect():
     db.execute('PRAGMA foreign_keys=ON')
     db.execute("""CREATE TABLE IF NOT EXISTS users (
         username TEXT PRIMARY KEY, salt BLOB NOT NULL, digest BLOB NOT NULL,
-        role TEXT NOT NULL DEFAULT 'admin', active INTEGER NOT NULL DEFAULT 1,
+        role TEXT NOT NULL DEFAULT 'user', active INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     cols={r['name'] for r in db.execute('PRAGMA table_info(users)')}
-    if 'role' not in cols: db.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'admin'")
+    if 'role' not in cols: db.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
     if 'active' not in cols: db.execute("ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
     if 'created_at' not in cols: db.execute("ALTER TABLE users ADD COLUMN created_at TEXT NOT NULL DEFAULT ''")
     db.execute("""CREATE TABLE IF NOT EXISTS dietitian_assignments (
