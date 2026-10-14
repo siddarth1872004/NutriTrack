@@ -249,6 +249,7 @@ class Handler(SimpleHTTPRequestHandler):
                         if row['role']=='admin' and row['active'] and role!='admin' and db.execute("SELECT COUNT(*) FROM users WHERE role='admin' AND active=1").fetchone()[0]<=1:return self.json(400,{'error':'Cannot demote the last active administrator'})
                         db.execute('UPDATE users SET role=? WHERE username=?',(role,name))
                         if role!='dietitian':db.execute('DELETE FROM dietitian_assignments WHERE dietitian=?',(name,))
+                        if role!='user':db.execute('DELETE FROM dietitian_assignments WHERE username=?',(name,))
                     elif action=='delete':db.execute('DELETE FROM users WHERE username=?',(name,))
                 if action in ('disable','delete'):
                     with LOCK:
