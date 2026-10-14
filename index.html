@@ -741,8 +741,24 @@
 
 <script>
 (async function () {
-  const response = await fetch("/api/me", { credentials: "same-origin", cache: "no-store" });
-  if (!response.ok) { location.href = "/login"; return; }
+  async function publicDemo() {
+    const name = document.getElementById("accountName"), role = document.getElementById("accountRole");
+    if (name) name.textContent = "Public demo";
+    if (role) role.textContent = "NO LOGIN";
+    document.querySelectorAll('a[href="/auth/logout"]').forEach(link => link.hidden = true);
+    const banner = document.createElement("div");
+    banner.setAttribute("role", "status");
+    banner.style.cssText = "padding:10px 16px;background:#fff0d8;color:#67451b;text-align:center;font-size:13px";
+    banner.textContent = "Public demo mode: sign-in and separate accounts require the local launcher. Your data here is browser-only.";
+    document.body.prepend(banner);
+    await import("./js/app.js?v=2.5.0");
+  }
+  let response;
+  try { response = await fetch("/api/me", { credentials: "same-origin", cache: "no-store" }); }
+  catch (_) { await publicDemo(); return; }
+  if (response.status === 404) { await publicDemo(); return; }
+  if (response.status === 401) { location.href = "/login"; return; }
+  if (!response.ok) { await publicDemo(); return; }
   const user = await response.json();
   const name = document.getElementById("accountName"), role = document.getElementById("accountRole");
   if (name) name.textContent = user.username;
