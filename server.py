@@ -120,7 +120,7 @@ class Handler(SimpleHTTPRequestHandler):
                     CASE WHEN s.payload IS NULL THEN 0 ELSE 1 END AS has_data
                     FROM dietitian_assignments a JOIN users u ON u.username=a.username
                     LEFT JOIN nutrition_snapshots s ON s.username=u.username
-                    WHERE a.dietitian=? AND u.active=1 ORDER BY u.username""",(u['username'],)).fetchall()
+                    WHERE a.dietitian=? AND u.active=1 AND u.role='user' ORDER BY u.username""",(u['username'],)).fetchall()
             return self.json(200,{'clients':[dict(r) for r in rows]})
         if p.startswith('/api/dietitian/clients/'):
             u=session(self)
@@ -129,7 +129,7 @@ class Handler(SimpleHTTPRequestHandler):
             name=p[len('/api/dietitian/clients/'):]
             if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.json(400,{'error':'Invalid username'})
             with connect() as db:
-                assigned=db.execute('SELECT 1 FROM dietitian_assignments WHERE username=? AND dietitian=?',(name,u['username'])).fetchone()
+                assigned=db.execute("SELECT 1 FROM dietitian_assignments a JOIN users target ON target.username=a.username WHERE a.username=? AND a.dietitian=? AND target.active=1 AND target.role='user'",(name,u['username'])).fetchone()
                 if not assigned:return self.json(403,{'error':'This user is not assigned to you'})
                 row=db.execute('SELECT payload,updated_at FROM nutrition_snapshots WHERE username=?',(name,)).fetchone()
                 recs=db.execute('SELECT id,message,created_at FROM recommendations WHERE username=? AND dietitian=? ORDER BY id DESC LIMIT 100',(name,u['username'])).fetchall()
