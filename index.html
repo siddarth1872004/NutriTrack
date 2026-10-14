@@ -746,43 +746,64 @@
   const user = await response.json();
   const name = document.getElementById("accountName"), role = document.getElementById("accountRole");
   if (name) name.textContent = user.username;
-  if (role) role.textContent = user.role === "admin" ? "ADMIN" : "USER";
-  if (user.role === "dietitian") { location.href = "/dietitian.html"; return; }
-  if (user.role === "admin") { await import("./js/app.js?v=2.5.0"); return; }
+  if (role) role.textContent = user.role.toUpperCase();
+  if (user.role === "dietitian") { location.replace("/dietitian.html"); return; }
+
+  // Every account, including administrators, receives a separate browser-storage namespace.
   const prefix = "nutritrack_account:" + user.username + ":";
   const relevant = key => key.startsWith("nutrilog_") || key === "nutriMemory";
   const current = () => Object.keys(localStorage).filter(relevant);
-  const scoped = Object.keys(localStorage).filter(key => key.startsWith(prefix));
-  const keys = current();
-  if (!scoped.length && keys.length) {
-    keys.forEach(key => localStorage.setItem(prefix + key, localStorage.getItem(key)));
+  const scopedKeys = () => Object.keys(localStorage).filter(key => key.startsWith(prefix));
+  let activeKeys = current();
+  const ownKeys = scopedKeys();
+  // Migrate legacy unscoped data only to a user account, never to an admin account.
+  if (user.role === "user" && ownKeys.length === 0 && activeKeys.length > 0) {
+    activeKeys.forEach(key => localStorage.setItem(prefix + key, localStorage.getItem(key)));
   }
-  keys.forEach(key => localStorage.removeItem(key));
-  Object.keys(localStorage).filter(key => key.startsWith(prefix)).forEach(key => {
-    localStorage.setItem(key.slice(prefix.length), localStorage.getItem(key));
-  });
+  activeKeys.forEach(key => localStorage.removeItem(key));
+  scopedKeys().forEach(key => localStorage.setItem(key.slice(prefix.length), localStorage.getItem(key)));
+
   let syncing = false;
   async function syncSnapshot() {
-    if (syncing || document.visibilityState === "prerender") return;
+    if (user.role !== "user" || syncing || document.visibilityState === "prerender") return;
     syncing = true;
     try {
       const snapshot = {};
       const liveKeys = current();
-      liveKeys.forEach(key => { const value = localStorage.getItem(key); snapshot[key] = value; localStorage.setItem(prefix + key, value); });
-      Object.keys(localStorage).filter(key => key.startsWith(prefix) && !liveKeys.includes(key.slice(prefix.length))).forEach(key => localStorage.removeItem(key));
-      await fetch("/api/my-data", { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(snapshot) });
+      liveKeys.forEach(key => {
+        const value = localStorage.getItem(key);
+        snapshot[key] = value;
+        localStorage.setItem(prefix + key, value);
+      });
+      scopedKeys().filter(key => !liveKeys.includes(key.slice(prefix.length))).forEach(key => localStorage.removeItem(key));
+      const r = await fetch("/api/my-data", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify(snapshot)
+      });
+      if (!r.ok) console.warn("Nutrition snapshot sync failed:", r.status);
     } catch (error) { console.warn("Nutrition sync deferred", error); }
     finally { syncing = false; }
   }
-  window.addEventListener("storage", event => { if (event.key && relevant(event.key)) { const value = localStorage.getItem(event.key); if (value === null) localStorage.removeItem(prefix + event.key); else localStorage.setItem(prefix + event.key, value); } });
+
+  window.addEventListener("storage", event => {
+    if (!event.key || !relevant(event.key)) return;
+    const value = localStorage.getItem(event.key);
+    if (value === null) localStorage.removeItem(prefix + event.key);
+    else localStorage.setItem(prefix + event.key, value);
+  });
+
   await import("./js/app.js?v=2.5.0");
-  syncSnapshot();
-  setInterval(syncSnapshot, 5000);
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") syncSnapshot(); });
-  window.addEventListener("pagehide", syncSnapshot);
-  const header = document.querySelector(".header-right");
-  if (header && !document.getElementById("recommendationsLink")) {
-    const link = document.createElement("a"); link.id = "recommendationsLink"; link.href = "/recommendations.html"; link.className = "account-logout"; link.textContent = "Dietitian notes"; header.prepend(link);
+  if (user.role === "user") {
+    syncSnapshot();
+    setInterval(syncSnapshot, 5000);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") syncSnapshot(); });
+    window.addEventListener("pagehide", syncSnapshot);
+    const header = document.querySelector(".header-right");
+    if (header && !document.getElementById("recommendationsLink")) {
+      const link = document.createElement("a");
+      link.id = "recommendationsLink"; link.href = "/recommendations.html";
+      link.className = "account-logout"; link.textContent = "Dietitian notes"; header.prepend(link);
+    }
   }
 })().catch(error => { console.error(error); });
 </script>
