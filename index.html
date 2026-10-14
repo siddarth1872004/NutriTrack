@@ -765,61 +765,64 @@
   if (role) role.textContent = user.role.toUpperCase();
   if (user.role === "dietitian") { location.replace("/dietitian.html"); return; }
 
-  // Every account, including administrators, receives a separate browser-storage namespace.
+  // Namespace storage operations per tab/account so two users in separate tabs never share live keys.
   const prefix = "nutritrack_account:" + user.username + ":";
-  const relevant = key => key.startsWith("nutrilog_") || key === "nutriMemory";
-  const current = () => Object.keys(localStorage).filter(relevant);
-  const scopedKeys = () => Object.keys(localStorage).filter(key => key.startsWith(prefix));
-  let activeKeys = current();
-  const ownKeys = scopedKeys();
-  // Migrate legacy unscoped data only to a user account, never to an admin account.
-  const hasAnyAccountData = Object.keys(localStorage).some(key => key.startsWith("nutritrack_account:"));
-  if (user.role === "user" && ownKeys.length === 0 && activeKeys.length > 0 && !hasAnyAccountData) {
-    activeKeys.forEach(key => localStorage.setItem(prefix + key, localStorage.getItem(key)));
+  const relevant = key => typeof key === "string" && (key.startsWith("nutrilog_") || key === "nutriMemory");
+  const storageObject = window.localStorage;
+  const rawGet = Storage.prototype.getItem;
+  const rawSet = Storage.prototype.setItem;
+  const rawRemove = Storage.prototype.removeItem;
+  const rawKey = Storage.prototype.key;
+  const physicalKeys = () => {
+    const keys = [];
+    for (let i = 0; i < storageObject.length; i++) {
+      const key = rawKey.call(storageObject, i);
+      if (key !== null) keys.push(key);
+    }
+    return keys;
+  };
+  const accountKeys = () => physicalKeys().filter(key => key.startsWith(prefix)).map(key => key.slice(prefix.length));
+  const hasAnyAccountData = physicalKeys().some(key => key.startsWith("nutritrack_account:"));
+  const legacyKeys = physicalKeys().filter(key => relevant(key));
+  if (user.role === "user" && !hasAnyAccountData && legacyKeys.length) {
+    legacyKeys.forEach(key => rawSet.call(storageObject, prefix + key, rawGet.call(storageObject, key)));
   }
-  activeKeys.forEach(key => localStorage.removeItem(key));
-  scopedKeys().forEach(key => localStorage.setItem(key.slice(prefix.length), localStorage.getItem(key)));
+  // Remove unscoped legacy keys before the app starts; all future calls are transparently namespaced.
+  legacyKeys.forEach(key => rawRemove.call(storageObject, key));
+  window.__nutritrackStoragePrefix = prefix;
+  window.__nutritrackStorageKeys = () => accountKeys().filter(relevant);
 
-  function persistScopedStorage() {
-    current().forEach(key => {
-      const value = localStorage.getItem(key);
-      if (value !== null) localStorage.setItem(prefix + key, value);
-    });
-    scopedKeys().filter(key => !current().includes(key.slice(prefix.length))).forEach(key => localStorage.removeItem(key));
-  }
-  let syncing = false;
+  Storage.prototype.getItem = function (key) {
+    const name = String(key);
+    return rawGet.call(this, this === storageObject && relevant(name) ? prefix + name : key);
+  };
+  Storage.prototype.setItem = function (key, value) {
+    const name = String(key);
+    return rawSet.call(this, this === storageObject && relevant(name) ? prefix + name : key, value);
+  };
+  Storage.prototype.removeItem = function (key) {
+    const name = String(key);
+    return rawRemove.call(this, this === storageObject && relevant(name) ? prefix + name : key);
+  };
+
   async function syncSnapshot() {
-    if (user.role !== "user" || syncing || document.visibilityState === "prerender") return;
-    syncing = true;
+    if (user.role !== "user" || syncSnapshot.busy) return;
+    syncSnapshot.busy = true;
     try {
       const snapshot = {};
-      const liveKeys = current();
-      liveKeys.forEach(key => {
-        const value = localStorage.getItem(key);
-        snapshot[key] = value;
-        localStorage.setItem(prefix + key, value);
+      accountKeys().filter(relevant).forEach(key => {
+        snapshot[key] = rawGet.call(storageObject, prefix + key);
       });
-      scopedKeys().filter(key => !liveKeys.includes(key.slice(prefix.length))).forEach(key => localStorage.removeItem(key));
       const r = await fetch("/api/my-data", {
         method: "POST", credentials: "same-origin", cache: "no-store",
         headers: { "Content-Type": "application/json" }, body: JSON.stringify(snapshot)
       });
       if (!r.ok) console.warn("Nutrition snapshot sync failed:", r.status);
     } catch (error) { console.warn("Nutrition sync deferred", error); }
-    finally { syncing = false; }
+    finally { syncSnapshot.busy = false; }
   }
 
-  window.addEventListener("storage", event => {
-    if (!event.key || !relevant(event.key)) return;
-    const value = localStorage.getItem(event.key);
-    if (value === null) localStorage.removeItem(prefix + event.key);
-    else localStorage.setItem(prefix + event.key, value);
-  });
-
   await import("./js/app.js?v=2.5.0");
-  persistScopedStorage();
-  setInterval(persistScopedStorage, 2000);
-  window.addEventListener("pagehide", persistScopedStorage);
   if (user.role === "user") {
     syncSnapshot();
     setInterval(syncSnapshot, 5000);
