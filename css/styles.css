@@ -1135,3 +1135,12 @@ input[type="number"]::-webkit-inner-spin-button { opacity:.4; }
   .data-admin-heading { flex-direction:column; }
   .data-admin-summary { grid-template-columns:1fr; }
 }
+
+
+/* Local authenticated account controls */
+.account-chip { display:inline-flex; align-items:center; gap:7px; min-height:32px; padding:5px 9px; border:1px solid var(--hair-2); border-radius:var(--r-sm); color:var(--ink-2); font-size:.72rem; font-weight:800; white-space:nowrap; }
+.account-dot { width:7px; height:7px; border-radius:50%; background:var(--good); flex-shrink:0; }
+.account-role { padding:2px 4px; border-radius:3px; background:var(--accent-soft); color:var(--ink); font-family:var(--mono); font-size:.55rem; letter-spacing:.04em; }
+.account-logout { display:inline-flex; align-items:center; justify-content:center; min-height:32px; padding:5px 9px; border:1px solid var(--hair-2); border-radius:var(--r-sm); color:var(--ink-2); font-size:.72rem; font-weight:800; text-decoration:none; white-space:nowrap; }
+.account-logout:hover { border-color:var(--bad); color:var(--bad); }
+@media(max-width:640px) { .account-chip { flex-shrink:0; } .account-logout { flex-shrink:0; } }
