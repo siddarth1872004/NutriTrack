@@ -86,6 +86,23 @@ class NutriTrackAuthFlowTests(unittest.TestCase):
             "username": username, "password": password
         }, form=True)
 
+    def test_health_and_api_discovery_endpoints(self):
+        status, health = self.json_request(self.user, "/health")
+        self.assertEqual(status, 200)
+        self.assertEqual(health["status"], "ok")
+        self.assertEqual(health["database"], "ok")
+        status, api = self.json_request(self.user, "/api")
+        self.assertEqual(status, 200)
+        self.assertEqual(api["name"], "NutriTrack API")
+        self.assertIn("admin", api["endpoints"])
+        self.assertIn("dietitian", api["endpoints"])
+
+    def test_api_rejects_non_object_json_without_server_error(self):
+        self.assertEqual(self.json_request(self.admin, "/api/admin/users", [1, 2, 3])[0], 400)
+        self.assertEqual(self.create_account("dietitian2", "Dietitian-password-123!", "dietitian")[0], 201)
+        self.assertEqual(self.login(self.dietitian, "dietitian2", "Dietitian-password-123!")[0], 200)
+        self.assertEqual(self.json_request(self.dietitian, "/api/dietitian/recommendations", ["bad"])[0], 400)
+
     def test_public_signup_always_creates_user_and_cannot_access_admin(self):
         status, _ = self.json_request(self.user, "/auth/signup", {
             "username": "normaluser", "password": "User-password-123!",
