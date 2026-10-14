@@ -103,6 +103,37 @@ class Handler(SimpleHTTPRequestHandler):
             u=session(self)
             if not u:return self.json(401,{'error':'Sign in required'})
             return self.json(200,{'username':u['username'],'role':u['role']})
+        if p=='/api/my-recommendations':
+            u=session(self)
+            if not u:return self.json(401,{'error':'Sign in required'})
+            if u['role']!='user':return self.json(403,{'error':'User account required'})
+            with connect() as db:
+                rows=db.execute('SELECT id,dietitian,message,created_at FROM recommendations WHERE username=? ORDER BY id DESC LIMIT 100',(u['username'],)).fetchall()
+            return self.json(200,{'recommendations':[dict(r) for r in rows]})
+        if p=='/api/dietitian/clients':
+            u=session(self)
+            if not u:return self.json(401,{'error':'Sign in required'})
+            if u['role']!='dietitian':return self.json(403,{'error':'Dietitian account required'})
+            with connect() as db:
+                rows=db.execute("""SELECT u.username,a.assigned_at,s.updated_at,
+                    CASE WHEN s.payload IS NULL THEN 0 ELSE 1 END AS has_data
+                    FROM dietitian_assignments a JOIN users u ON u.username=a.username
+                    LEFT JOIN nutrition_snapshots s ON s.username=u.username
+                    WHERE a.dietitian=? AND u.active=1 ORDER BY u.username""",(u['username'],)).fetchall()
+            return self.json(200,{'clients':[dict(r) for r in rows]})
+        if p.startswith('/api/dietitian/clients/'):
+            u=session(self)
+            if not u:return self.json(401,{'error':'Sign in required'})
+            if u['role']!='dietitian':return self.json(403,{'error':'Dietitian account required'})
+            name=p[len('/api/dietitian/clients/'):]
+            if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.json(400,{'error':'Invalid username'})
+            with connect() as db:
+                assigned=db.execute('SELECT 1 FROM dietitian_assignments WHERE username=? AND dietitian=?',(name,u['username'])).fetchone()
+                if not assigned:return self.json(403,{'error':'This user is not assigned to you'})
+                row=db.execute('SELECT payload,updated_at FROM nutrition_snapshots WHERE username=?',(name,)).fetchone()
+                recs=db.execute('SELECT id,message,created_at FROM recommendations WHERE username=? AND dietitian=? ORDER BY id DESC LIMIT 100',(name,u['username'])).fetchall()
+            payload=json.loads(row['payload']) if row else {}
+            return self.json(200,{'username':name,'snapshot':payload,'updated_at':row['updated_at'] if row else None,'recommendations':[dict(r) for r in recs]})
         if p=='/auth/logout':
             c=http.cookies.SimpleCookie()
             try:c.load(self.headers.get('Cookie','')); token=c[COOKIE].value
@@ -122,12 +153,17 @@ class Handler(SimpleHTTPRequestHandler):
                     admins=db.execute("SELECT COUNT(*) FROM users WHERE role='admin' AND active=1").fetchone()[0]
                     active=db.execute('SELECT COUNT(*) FROM users WHERE active=1').fetchone()[0]
                     rows=db.execute('SELECT username,role,active,created_at FROM users ORDER BY created_at,username').fetchall()
-                return self.json(200,{'current_user':u['username'],'total_users':total,'active_users':active,'admins':admins,'users':[dict(x) for x in rows]})
+                    assignments=db.execute('SELECT username,dietitian,assigned_at FROM dietitian_assignments').fetchall()
+                return self.json(200,{'current_user':u['username'],'total_users':total,'active_users':active,'admins':admins,'users':[dict(x) for x in rows],'assignments':[dict(x) for x in assignments]})
             return self.json(404,{'error':'Not found'})
         if not user_count():return self.go('/auth/setup')
         u=session(self)
         if not u:return self.go('/login')
-        if p=='/admin.html' and u['role']!='admin':return self.go('/')
+        if p=='/admin.html' and u['role']!='admin':return self.go('/dietitian.html' if u['role']=='dietitian' else '/')
+        if p=='/dietitian.html' and u['role']!='dietitian':return self.go('/admin.html' if u['role']=='admin' else '/')
+        if p=='/recommendations.html' and u['role']!='user':return self.go('/dietitian.html' if u['role']=='dietitian' else '/admin.html')
+        if p=='/' and u['role']=='dietitian':return self.go('/dietitian.html')
+        if p=='/' and u['role']=='admin':return self.go('/admin.html')
         if p=='/':self.path='/index.html'
         return super().do_GET()
     def do_POST(self):
@@ -136,6 +172,19 @@ class Handler(SimpleHTTPRequestHandler):
         except ValueError:n=0
         if n<0 or n>16384:return self.json(413,{'error':'Request too large'})
         raw=self.rfile.read(n)
+        if p=='/api/my-data':
+            u=session(self)
+            if not u:return self.json(401,{'error':'Sign in required'})
+            if u['role']!='user':return self.json(403,{'error':'Only user accounts can sync nutrition data'})
+            try:data=json.loads(raw or b'{}')
+            except (json.JSONDecodeError,UnicodeDecodeError):return self.json(400,{'error':'Invalid JSON'})
+            if not isinstance(data,dict) or len(data)>100:return self.json(400,{'error':'Invalid snapshot format'})
+            payload=json.dumps(data,separators=(',',':'))
+            if len(payload.encode())>1_000_000:return self.json(413,{'error':'Nutrition snapshot is too large'})
+            with connect() as db:
+                db.execute("""INSERT INTO nutrition_snapshots(username,payload,updated_at) VALUES(?,?,CURRENT_TIMESTAMP)
+                    ON CONFLICT(username) DO UPDATE SET payload=excluded.payload,updated_at=CURRENT_TIMESTAMP""",(u['username'],payload))
+            return self.json(200,{'ok':True})
         if p.startswith('/api/admin/'):
             actor=self.admin_required()
             if not actor:return
@@ -145,12 +194,26 @@ class Handler(SimpleHTTPRequestHandler):
                 name=str(data.get('username','')).strip(); pw=str(data.get('password','')); role=data.get('role','user')
                 if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.json(400,{'error':'Username must be 3–40 letters, numbers, dots, underscores or hyphens'})
                 if len(pw)<12 or len(pw)>256:return self.json(400,{'error':'Password must be 12–256 characters'})
-                if role not in ('admin','user'):return self.json(400,{'error':'Invalid role'})
+                if role not in ('admin','user','dietitian'):return self.json(400,{'error':'Invalid role'})
                 salt,digest=derive(pw)
                 try:
                     with connect() as db:db.execute('INSERT INTO users(username,salt,digest,role,active,created_at) VALUES(?,?,?,?,1,CURRENT_TIMESTAMP)',(name,salt,digest,role))
                 except sqlite3.IntegrityError:return self.json(409,{'error':'Username already exists'})
                 return self.json(201,{'ok':True,'message':'Account created'})
+            if p=='/api/admin/assignments':
+                username=str(data.get('username','')).strip()
+                dietitian=str(data.get('dietitian','')).strip()
+                with connect() as db:
+                    user=db.execute("SELECT role,active FROM users WHERE username=?",(username,)).fetchone()
+                    if not user or user['role']!='user' or not user['active']:return self.json(400,{'error':'Choose an active user account'})
+                    if not dietitian:
+                        db.execute('DELETE FROM dietitian_assignments WHERE username=?',(username,))
+                        return self.json(200,{'ok':True,'message':'Dietitian assignment removed'})
+                    dr=db.execute("SELECT role,active FROM users WHERE username=?",(dietitian,)).fetchone()
+                    if not dr or dr['role']!='dietitian' or not dr['active']:return self.json(400,{'error':'Choose an active dietitian account'})
+                    db.execute("""INSERT INTO dietitian_assignments(username,dietitian,assigned_at) VALUES(?,?,CURRENT_TIMESTAMP)
+                        ON CONFLICT(username) DO UPDATE SET dietitian=excluded.dietitian,assigned_at=CURRENT_TIMESTAMP""",(username,dietitian))
+                return self.json(200,{'ok':True,'message':'Dietitian assigned'})
             match=re.fullmatch(r'/api/admin/users/([A-Za-z0-9_.-]{3,40})/(disable|enable|role|delete)',p)
             if match:
                 name,action=match.groups()
