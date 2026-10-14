@@ -22,6 +22,7 @@ def connect():
     STATE.mkdir(mode=0o700, parents=True, exist_ok=True)
     db=sqlite3.connect(DB, timeout=10)
     db.row_factory=sqlite3.Row
+    db.execute('PRAGMA foreign_keys=ON')
     db.execute("""CREATE TABLE IF NOT EXISTS users (
         username TEXT PRIMARY KEY, salt BLOB NOT NULL, digest BLOB NOT NULL,
         role TEXT NOT NULL DEFAULT 'admin', active INTEGER NOT NULL DEFAULT 1,
@@ -245,9 +246,10 @@ class Handler(SimpleHTTPRequestHandler):
                     elif action=='enable':db.execute('UPDATE users SET active=1 WHERE username=?',(name,))
                     elif action=='role':
                         role=data.get('role')
-                        if role not in ('admin','user'):return self.json(400,{'error':'Invalid role'})
+                        if role not in ('admin','user','dietitian'):return self.json(400,{'error':'Invalid role'})
                         if row['role']=='admin' and row['active'] and role!='admin' and db.execute("SELECT COUNT(*) FROM users WHERE role='admin' AND active=1").fetchone()[0]<=1:return self.json(400,{'error':'Cannot demote the last active administrator'})
                         db.execute('UPDATE users SET role=? WHERE username=?',(role,name))
+                        if role!='dietitian':db.execute('DELETE FROM dietitian_assignments WHERE dietitian=?',(name,))
                     elif action=='delete':db.execute('DELETE FROM users WHERE username=?',(name,))
                 if action in ('disable','delete'):
                     with LOCK:
