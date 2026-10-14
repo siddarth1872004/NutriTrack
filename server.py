@@ -131,7 +131,7 @@ class Handler(SimpleHTTPRequestHandler):
         p=urlparse(self.path).path
         if p=='/admin-setup':
             with connect() as db:
-                exists=db.execute("SELECT 1 FROM users WHERE role='admin' AND active=1 LIMIT 1").fetchone()
+                exists=db.execute("SELECT 1 FROM users WHERE role='admin' LIMIT 1").fetchone()
             if exists:return self.send_bytes(200,admin_setup_page(recovery=True),'text/html; charset=utf-8')
             return self.send_bytes(200,admin_setup_page(),'text/html; charset=utf-8')
         if p=='/health':
@@ -318,11 +318,11 @@ class Handler(SimpleHTTPRequestHandler):
             if not hmac.compare_digest(pw,form.get('confirm',[''])[0]):return self.send_bytes(400,admin_setup_page('Passwords do not match.'),'text/html; charset=utf-8')
             salt,digest=derive(pw)
             with connect() as db:
-                existing=db.execute("SELECT username FROM users WHERE role='admin' AND active=1 LIMIT 1").fetchone()
+                existing=db.execute("SELECT username FROM users WHERE role='admin' LIMIT 1").fetchone()
                 if existing:
-                    admin=db.execute("SELECT username FROM users WHERE username=? AND role='admin' AND active=1",(name,)).fetchone()
+                    admin=db.execute("SELECT username FROM users WHERE username=? AND role='admin'",(name,)).fetchone()
                     if not admin:return self.send_bytes(400,admin_setup_page('Enter the username of an existing active administrator.',recovery=True),'text/html; charset=utf-8')
-                    db.execute("UPDATE users SET salt=?,digest=? WHERE username=?",(salt,digest,name))
+                    db.execute("UPDATE users SET salt=?,digest=?,active=1 WHERE username=?",(salt,digest,name))
                     message='Administrator password reset successfully.'
                 else:
                     try: db.execute("INSERT INTO users(username,salt,digest,role,active,created_at) VALUES(?,?,?,'admin',1,CURRENT_TIMESTAMP)",(name,salt,digest))
