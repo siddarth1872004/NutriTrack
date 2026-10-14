@@ -289,12 +289,12 @@ class Handler(SimpleHTTPRequestHandler):
             with FLOCK:FAIL.pop(ip,None)
             return self.go('/',[('Set-Cookie',cookie(new_session(name)))])
         return self.json(404,{'error':'Not found'})
-def bootstrap_admin():
+def bootstrap_admin(ensure=False):
     connect().close()
     with connect() as db:
         if db.execute("SELECT 1 FROM users WHERE role='admin' LIMIT 1").fetchone():
             print('An administrator account already exists. No changes made.')
-            return 1
+            return 0 if ensure else 1
     print('NutriTrack administrator setup (this is separate from public user sign-up).')
     name=input('Administrator username: ').strip()
     if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):
@@ -316,11 +316,8 @@ def bootstrap_admin():
 def main():
     if len(sys.argv)>1:
         if sys.argv[1]=='--create-admin':raise SystemExit(bootstrap_admin())
-        print('Usage: python server.py [--create-admin]');raise SystemExit(2)
-    if not user_count():
-        with connect() as db:
-            db.execute("INSERT OR IGNORE INTO users(username,salt,digest,role,active,created_at) VALUES('__bootstrap_disabled__',X'',X'','admin',0,CURRENT_TIMESTAMP)")
-            db.execute("DELETE FROM users WHERE username='__bootstrap_disabled__'")
+        if sys.argv[1]=='--ensure-admin':raise SystemExit(bootstrap_admin(ensure=True))
+        print('Usage: python server.py [--create-admin|--ensure-admin]');raise SystemExit(2)
     port=None
     for candidate in range(BASE,BASE+20):
         s=socket.socket()
