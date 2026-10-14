@@ -6,49 +6,28 @@ REQUIREMENTS
 - No pip packages, Node.js or external database service are required.
 - The local server binds only to 127.0.0.1. Do not expose it to your network.
 
-FIRST RUN
-1. Run `Run-NutriTrack.bat` on Windows or `Run-NutriTrack.command` on Linux/macOS.
-2. On the first run, the launcher opens a separate administrator-bootstrap prompt in the terminal. Create the admin username and password there. This is NOT public sign-up.
-3. The launcher then starts NutriTrack and opens the browser.
-4. For later launches, the existing admin is detected and the server starts without asking to create it again.
+START
+1. Run Run-NutriTrack.bat on Windows or Run-NutriTrack.command on Linux/macOS.
+2. The launcher starts the local server and opens the browser. No administrator setup is required in the terminal.
+3. On a fresh database, open /admin-setup (the login page also links to it), keep the suggested admin username admin, and choose a password of at least 12 characters.
+4. The setup creates the admin account and, if the username is available, a demo dietitian account named dietitian. Its password is generated securely and shown once in the browser. Save it for testing; it is not displayed again.
+5. If the existing admin password is not working, open /admin-setup, enter the existing active admin username, and set a new password. This recovery page is intended only for the local computer; do not expose NutriTrack to a network or share the recovery page.
+6. Public sign-up creates normal user accounts only. Sign in as admin to create more users and assign clients to dietitians.
 
-You can also run `python server.py --ensure-admin` to create the first administrator only when one does not already exist. `python server.py --create-admin` explicitly fails if an administrator already exists. Account passwords must be 12–256 characters.
+DEMO ACCOUNTS
+- Admin username: admin by default (you choose the password during setup).
+- Dietitian username: dietitian (a random password is shown once after setup).
+- These are local demo accounts. Do not use demo data or credentials for a public deployment or real sensitive health data.
 
 HTTP SERVER AND API CHECKS
 - The server listens on 127.0.0.1 and defaults to port 8765. If occupied, it searches ports 8765–8794 and prints the actual URL. Always open the exact URL printed by the terminal.
 - Keep the terminal window open. Stop the server with Ctrl+C before restarting it.
-- Check server plus SQLite health at `/health`; expected JSON includes `"status":"ok"` and `"database":"ok"`.
-- Open `/api` to inspect the available API route list. JSON APIs use `Content-Type: application/json` and session cookies are sent by browser requests on the same origin.
-- Useful endpoints: `GET /api/me`, `GET /api/admin/overview`, `POST /api/admin/users`, `POST /api/admin/assignments`, `GET /api/dietitian/clients`, `GET /api/dietitian/clients/{username}`, `POST /api/dietitian/recommendations`, `POST /api/my-data`, and `GET /api/my-recommendations`.
-- For command-line diagnostics, start the server then run `curl http://127.0.0.1:8765/health` (Windows PowerShell can use `Invoke-RestMethod http://127.0.0.1:8765/health`). An unauthenticated `/api/me` returns HTTP 401 by design.
-- If you see a server error, keep the terminal open and read its `[NutriTrack]` request log or Python traceback. Do not open `index.html` directly from the file system; that bypasses the HTTP server and API.
+- Check server plus SQLite health at /health; expected JSON includes status=ok and database=ok.
+- Open /api to inspect the available API route list. JSON APIs use Content-Type: application/json and session cookies are sent by browser requests on the same origin.
+- Useful endpoints: GET /api/me, GET /api/admin/overview, POST /api/admin/users, POST /api/admin/assignments, GET /api/dietitian/clients, GET /api/dietitian/clients/{username}, POST /api/dietitian/recommendations, POST /api/my-data, and GET /api/my-recommendations.
 
-DEVELOPER TESTS
-- Python 3.10+ is required. From the repository folder run `python -m py_compile server.py` and `python -m unittest discover -s tests -v` (Windows may use `py -3` instead of `python`).
-- Tests use a temporary database and do not erase your real `.nutritrack/auth.sqlite3`.
-
-ACCOUNT ROLES AND SIGN-UP
-- **Administrator:** created only by the one-time terminal bootstrap. Admins manage accounts, roles, and dietitian assignments from `/admin.html`.
-- **User:** public sign-up at `/signup` always creates a normal user account. It never grants administrator or dietitian permissions. Users can log food, set goals, view history/reports, and read dietitian notes at `/recommendations.html`.
-- **Dietitian:** can only be created/promoted by an administrator. Dietitians sign in at `/login` and are redirected to `/dietitian.html`. They can view only active users assigned to them and can post recommendations for those assigned users.
-- Each active user can have one assigned dietitian. Admins can assign, replace, or remove that assignment. Role/assignment permissions are checked by the server, not just by hiding pages.
-
-DATA ISOLATION AND SYNC
-- Browser nutrition keys are partitioned by account username for both user and admin sessions. Switching accounts in the same browser restores that account's own namespace instead of reusing the previous account's active data.
-- User nutrition snapshots are sent to the local server while that user has the tracker open. Dietitians can read the last synced snapshot for users assigned to them. Recommendations are stored locally and shown to the relevant user.
-- Existing unscoped browser data is migrated only for a user account when no account-specific data already exists in that browser. It is not copied into an admin account or another account once account namespaces exist.
-- The sync is a local demo feature, not real-time collaboration. The tracker must be open and signed in for new nutrition changes to sync.
-
-ADMIN DASHBOARD
-Open `/admin.html` while signed in as admin. You can create accounts, change roles, enable/disable/delete accounts, and assign users to dietitians. The server prevents non-admins from using admin APIs and prevents dietitians from reading unassigned users. You cannot remove/demote your own admin account or remove the last active admin.
-
-AUTHENTICATION
-Passwords are stored as PBKDF2-HMAC-SHA256 hashes with random salts. Sessions use an HttpOnly, SameSite cookie and expire after 12 hours; failed sign-in attempts are rate-limited. Accounts and dietitian recommendations are stored in `.nutritrack/auth.sqlite3`. Do not delete that file unless you intend to remove local accounts and recommendations.
-
-IMPORTANT LIMITATIONS
-This is a local classroom/demo prototype, not a production medical-record platform. Nutrition snapshots sync from the browser into a local SQLite file; there is no hosted multi-device database service. Browser LocalStorage is not encrypted, and this login gate does not replace OS security. Before public deployment, use HTTPS, CSRF protection, secure server-side sessions, a maintained production server, robust authorization, data export/deletion policies, backups, and appropriate privacy controls.
-
-TROUBLESHOOTING
-- If the launcher asks you to create an administrator even though one should exist, check that you are running the same repository folder and that `.nutritrack/auth.sqlite3` is present.
-- Existing installations keep role assignments already stored in their account database. If an old database has no role column, migrated accounts default to the normal user role; the launcher will prompt you to create an administrator. New public sign-ups are always normal users.
-- Stop the server with Ctrl+C in the terminal.
+DATA AND TROUBLESHOOTING
+- The local SQLite database is stored at .nutritrack/auth.sqlite3. Do not delete this file to fix login problems; it contains accounts and related local records.
+- The tracker stores browser data per account and syncs a snapshot to the local SQLite database while the tracker is open.
+- If a port is busy, use the exact local URL printed at startup.
+- Tests: python -m unittest discover -s tests -v.
