@@ -40,6 +40,8 @@
     <div id="savedPulse" class="saved-pulse" title="Auto-saved">✓</div>
   </div>
   <div class="header-right">
+    <div class="account-chip" aria-live="polite"><span class="account-dot" aria-hidden="true"></span><span id="accountName">Signed in</span><span id="accountRole" class="account-role"></span></div>
+    <a class="account-logout" href="/auth/logout" title="Sign out of NutriTrack">Sign out</a>
     <button id="themeBtn"      class="icon-btn" title="Toggle theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"/><circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"/></svg></button>
     <button id="shortcutsBtn"  class="icon-btn" title="Shortcuts (?)">⌨</button>
     <button id="historyBtn"    class="icon-btn" title="History (H)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
@@ -737,6 +739,9 @@
 
 <div id="toastContainer" class="toast-container"></div>
 
+<script>
+fetch("/api/me", { credentials: "same-origin", cache: "no-store" }).then(function (response) { if (!response.ok) throw new Error("Not signed in"); return response.json(); }).then(function (user) { var name = document.getElementById("accountName"); var role = document.getElementById("accountRole"); if (name) name.textContent = user.username; if (role) role.textContent = user.role === "admin" ? "ADMIN" : "USER"; }).catch(function () { var name = document.getElementById("accountName"); if (name) name.textContent = "Local account"; });
+</script>
 <script type="module" src="js/app.js?v=2.4.0"></script>
 </body>
 </html>
