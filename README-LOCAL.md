@@ -37,5 +37,5 @@ This is a local classroom/demo prototype, not a production medical-record platfo
 
 TROUBLESHOOTING
 - If the launcher asks you to create an administrator even though one should exist, check that you are running the same repository folder and that `.nutritrack/auth.sqlite3` is present.
-- If you have an old installation where the first account was automatically made admin, that existing account remains admin for compatibility. New sign-ups are always normal users.
+- Existing installations keep role assignments already stored in their account database. If an old database has no role column, migrated accounts default to the normal user role; the launcher will prompt you to create an administrator. New public sign-ups are always normal users.
 - Stop the server with Ctrl+C in the terminal.
