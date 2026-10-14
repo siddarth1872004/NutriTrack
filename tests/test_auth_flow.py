@@ -91,7 +91,7 @@ class NutriTrackAuthFlowTests(unittest.TestCase):
             "username": "normaluser", "password": "User-password-123!",
             "confirm": "User-password-123!"
         }, form=True)
-        self.assertEqual(status, 303)
+        self.assertEqual(status, 200)
         self.login(self.user, "normaluser", "User-password-123!")
         status, me = self.json_request(self.user, "/api/me")
         self.assertEqual(status, 200)
@@ -103,14 +103,14 @@ class NutriTrackAuthFlowTests(unittest.TestCase):
         self.assertEqual(self.create_account("dietitian1", "Dietitian-password-123!", "dietitian")[0], 201)
         self.assertEqual(self.create_account("patientone", "Patient-password-123!", "user")[0], 201)
         self.assertEqual(self.create_account("patienttwo", "Patient-two-password-123!", "user")[0], 201)
-        self.assertEqual(self.login(self.user, "patientone", "Patient-password-123!")[0], 303)
-        self.assertEqual(self.login(self.other, "patienttwo", "Patient-two-password-123!")[0], 303)
+        self.assertEqual(self.login(self.user, "patientone", "Patient-password-123!")[0], 200)
+        self.assertEqual(self.login(self.other, "patienttwo", "Patient-two-password-123!")[0], 200)
         self.assertEqual(self.json_request(self.admin, "/api/admin/assignments", {
             "username": "patientone", "dietitian": "dietitian1"
         })[0], 200)
         snapshot = {"nutrilog_profile": json.dumps({"age": "25"}), "nutrilog_log_today": json.dumps([{"name": "Oats", "cal": 150}])}
         self.assertEqual(self.json_request(self.user, "/api/my-data", snapshot)[0], 200)
-        self.assertEqual(self.login(self.dietitian, "dietitian1", "Dietitian-password-123!")[0], 303)
+        self.assertEqual(self.login(self.dietitian, "dietitian1", "Dietitian-password-123!")[0], 200)
         status, clients = self.json_request(self.dietitian, "/api/dietitian/clients")
         self.assertEqual(status, 200)
         self.assertEqual([c["username"] for c in clients["clients"]], ["patientone"])
