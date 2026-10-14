@@ -14,6 +14,19 @@ FIRST RUN
 
 You can also run `python server.py --ensure-admin` to create the first administrator only when one does not already exist. `python server.py --create-admin` explicitly fails if an administrator already exists. Account passwords must be 12–256 characters.
 
+HTTP SERVER AND API CHECKS
+- The server listens on 127.0.0.1 and defaults to port 8765. If occupied, it searches ports 8765–8794 and prints the actual URL. Always open the exact URL printed by the terminal.
+- Keep the terminal window open. Stop the server with Ctrl+C before restarting it.
+- Check server plus SQLite health at `/health`; expected JSON includes `"status":"ok"` and `"database":"ok"`.
+- Open `/api` to inspect the available API route list. JSON APIs use `Content-Type: application/json` and session cookies are sent by browser requests on the same origin.
+- Useful endpoints: `GET /api/me`, `GET /api/admin/overview`, `POST /api/admin/users`, `POST /api/admin/assignments`, `GET /api/dietitian/clients`, `GET /api/dietitian/clients/{username}`, `POST /api/dietitian/recommendations`, `POST /api/my-data`, and `GET /api/my-recommendations`.
+- For command-line diagnostics, start the server then run `curl http://127.0.0.1:8765/health` (Windows PowerShell can use `Invoke-RestMethod http://127.0.0.1:8765/health`). An unauthenticated `/api/me` returns HTTP 401 by design.
+- If you see a server error, keep the terminal open and read its `[NutriTrack]` request log or Python traceback. Do not open `index.html` directly from the file system; that bypasses the HTTP server and API.
+
+DEVELOPER TESTS
+- Python 3.10+ is required. From the repository folder run `python -m py_compile server.py` and `python -m unittest discover -s tests -v` (Windows may use `py -3` instead of `python`).
+- Tests use a temporary database and do not erase your real `.nutritrack/auth.sqlite3`.
+
 ACCOUNT ROLES AND SIGN-UP
 - **Administrator:** created only by the one-time terminal bootstrap. Admins manage accounts, roles, and dietitian assignments from `/admin.html`.
 - **User:** public sign-up at `/signup` always creates a normal user account. It never grants administrator or dietitian permissions. Users can log food, set goals, view history/reports, and read dietitian notes at `/recommendations.html`.
