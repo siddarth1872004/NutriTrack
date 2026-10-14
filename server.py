@@ -99,6 +99,10 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         p=urlparse(self.path).path
         if p=='/health': return self.json(200,{'status':'ok'})
+        if p=='/api/me':
+            u=session(self)
+            if not u:return self.json(401,{'error':'Sign in required'})
+            return self.json(200,{'username':u['username'],'role':u['role']})
         if p=='/auth/logout':
             c=http.cookies.SimpleCookie()
             try:c.load(self.headers.get('Cookie','')); token=c[COOKIE].value
