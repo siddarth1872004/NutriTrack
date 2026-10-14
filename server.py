@@ -170,8 +170,24 @@ class Handler(SimpleHTTPRequestHandler):
         p=urlparse(self.path).path
         try:n=int(self.headers.get('Content-Length','0'))
         except ValueError:n=0
-        if n<0 or n>16384:return self.json(413,{'error':'Request too large'})
+        limit=1_100_000 if p=='/api/my-data' else 16384
+        if n<0 or n>limit:return self.json(413,{'error':'Request too large'})
         raw=self.rfile.read(n)
+        if p=='/api/dietitian/recommendations':
+            u=session(self)
+            if not u:return self.json(401,{'error':'Sign in required'})
+            if u['role']!='dietitian':return self.json(403,{'error':'Dietitian account required'})
+            try:data=json.loads(raw or b'{}')
+            except (json.JSONDecodeError,UnicodeDecodeError):return self.json(400,{'error':'Invalid JSON'})
+            name=str(data.get('username','')).strip()
+            message=str(data.get('message','')).strip()
+            if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.json(400,{'error':'Invalid username'})
+            if not message or len(message)>4000:return self.json(400,{'error':'Recommendation must be 1–4000 characters'})
+            with connect() as db:
+                assigned=db.execute('SELECT 1 FROM dietitian_assignments WHERE username=? AND dietitian=?',(name,u['username'])).fetchone()
+                if not assigned:return self.json(403,{'error':'This user is not assigned to you'})
+                db.execute('INSERT INTO recommendations(username,dietitian,message) VALUES(?,?,?)',(name,u['username'],message))
+            return self.json(201,{'ok':True,'message':'Recommendation saved'})
         if p=='/api/my-data':
             u=session(self)
             if not u:return self.json(401,{'error':'Sign in required'})
