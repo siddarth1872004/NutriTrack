@@ -307,7 +307,7 @@ class Handler(SimpleHTTPRequestHandler):
 def bootstrap_admin(ensure=False):
     connect().close()
     with connect() as db:
-        if db.execute("SELECT 1 FROM users WHERE role='admin' LIMIT 1").fetchone():
+        if db.execute("SELECT 1 FROM users WHERE role='admin' AND active=1 LIMIT 1").fetchone():
             print('An administrator account already exists. No changes made.')
             return 0 if ensure else 1
     print('NutriTrack administrator setup (this is separate from public user sign-up).')
