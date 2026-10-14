@@ -7,6 +7,11 @@ import { createFoodMemory } from './memory.js?v=2.0.0';
    function definitions, proper mobile + storage support
 ══════════════════════════════════════════════════════ */
 
+function storageKeys() {
+  if (typeof window.__nutritrackStorageKeys === 'function') return window.__nutritrackStorageKeys();
+  return Object.keys(localStorage);
+}
+
 /* ─── Custom foods ─────────────────────────────────── */
 const storage = {
   get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
@@ -1658,13 +1663,13 @@ g('importFile')?.addEventListener('change',function(e){
 
 function refreshDataAdminSummary(){
   const el=g('dataAdminSummary');if(!el)return;
-  const keyCount=Object.keys(localStorage).filter(k=>k.startsWith('nutrilog_')).length;
+  const keyCount=storageKeys().filter(k=>k.startsWith('nutrilog_')).length;
   const historyDays=Object.keys(history||{}).length;
   const savedFoodCount=Array.isArray(savedFoods)?savedFoods.length:Object.keys(savedFoods||{}).length;
   const customFoodCount=Object.keys(USER_DB||{}).length;
   const templateCount=Object.keys(mealTemplates||{}).length;
   const weightCount=Array.isArray(bodyWeight)?bodyWeight.length:0;
-  const bytes=Object.keys(localStorage).filter(k=>k.startsWith('nutrilog_')||k==='nutriMemory').reduce((sum,k)=>sum+k.length+(localStorage.getItem(k)||'').length,0)*2;
+  const bytes=storageKeys().filter(k=>k.startsWith('nutrilog_')||k==='nutriMemory').reduce((sum,k)=>sum+k.length+(localStorage.getItem(k)||'').length,0)*2;
   const fmt=bytes<1024?`${bytes} B`:bytes<1024*1024?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1024/1024).toFixed(2)} MB`;
   el.innerHTML=[
     ['Storage keys',keyCount],['Saved foods',savedFoodCount],['Custom foods',customFoodCount],
@@ -1675,7 +1680,7 @@ g('refreshDataAdminBtn')?.addEventListener('click',()=>{refreshDataAdminSummary(
 g('clearAllDataBtn')?.addEventListener('click',()=>{
   if(!confirm('Erase ALL NutriTrack data stored in this browser? This cannot be undone. Export a backup first if you need one.'))return;
   if(!confirm('Final confirmation: permanently delete your profile, goals, food logs, history, custom foods, templates and weight records?'))return;
-  Object.keys(localStorage).filter(k=>k.startsWith('nutrilog_')||k==='nutriMemory').forEach(k=>localStorage.removeItem(k));
+  storageKeys().filter(k=>k.startsWith('nutrilog_')||k==='nutriMemory').forEach(k=>localStorage.removeItem(k));
   location.reload();
 });
 refreshDataAdminSummary();
