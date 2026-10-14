@@ -184,7 +184,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.json(400,{'error':'Invalid username'})
             if not message or len(message)>4000:return self.json(400,{'error':'Recommendation must be 1–4000 characters'})
             with connect() as db:
-                assigned=db.execute('SELECT 1 FROM dietitian_assignments WHERE username=? AND dietitian=?',(name,u['username'])).fetchone()
+                assigned=db.execute("SELECT 1 FROM dietitian_assignments a JOIN users target ON target.username=a.username WHERE a.username=? AND a.dietitian=? AND target.active=1 AND target.role='user'",(name,u['username'])).fetchone()
                 if not assigned:return self.json(403,{'error':'This user is not assigned to you'})
                 db.execute('INSERT INTO recommendations(username,dietitian,message) VALUES(?,?,?)',(name,u['username'],message))
             return self.json(201,{'ok':True,'message':'Recommendation saved'})
