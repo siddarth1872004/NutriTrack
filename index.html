@@ -757,7 +757,8 @@
   let activeKeys = current();
   const ownKeys = scopedKeys();
   // Migrate legacy unscoped data only to a user account, never to an admin account.
-  if (user.role === "user" && ownKeys.length === 0 && activeKeys.length > 0) {
+  const hasAnyAccountData = Object.keys(localStorage).some(key => key.startsWith("nutritrack_account:"));
+  if (user.role === "user" && ownKeys.length === 0 && activeKeys.length > 0 && !hasAnyAccountData) {
     activeKeys.forEach(key => localStorage.setItem(prefix + key, localStorage.getItem(key)));
   }
   activeKeys.forEach(key => localStorage.removeItem(key));
