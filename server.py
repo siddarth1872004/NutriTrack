@@ -32,6 +32,21 @@ def connect():
     if 'role' not in cols: db.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'admin'")
     if 'active' not in cols: db.execute("ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
     if 'created_at' not in cols: db.execute("ALTER TABLE users ADD COLUMN created_at TEXT NOT NULL DEFAULT ''")
+    db.execute("""CREATE TABLE IF NOT EXISTS dietitian_assignments (
+        username TEXT PRIMARY KEY REFERENCES users(username) ON DELETE CASCADE,
+        dietitian TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+        assigned_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS nutrition_snapshots (
+        username TEXT PRIMARY KEY REFERENCES users(username) ON DELETE CASCADE,
+        payload TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS recommendations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+        dietitian TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+        message TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )""")
     db.commit()
     return db
 
