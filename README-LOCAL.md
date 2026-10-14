@@ -1,18 +1,41 @@
-NutriTrack — one-click local setup
-=================================
+NutriTrack — local setup
+========================
 
-WINDOWS: Install Python 3.10+ from https://www.python.org/downloads/ if needed (enable Add Python to PATH). Clone/download this repository, then double-click Run-NutriTrack.bat. Your browser opens. On first launch create a username and password of at least 12 characters; the first account becomes the administrator. Later launches require sign-in.
+REQUIREMENTS
+- Python 3.10 or newer.
+- No pip packages, Node.js or external database service are required.
+- The local server binds only to 127.0.0.1. Do not expose it to your network.
 
-LINUX: run chmod +x Run-NutriTrack.command && ./Run-NutriTrack.command, or python3 server.py.
+FIRST RUN
+1. Run `Run-NutriTrack.bat` on Windows or `Run-NutriTrack.command` on Linux/macOS.
+2. On the first run, the launcher opens a separate administrator-bootstrap prompt in the terminal. Create the admin username and password there. This is NOT public sign-up.
+3. The launcher then starts NutriTrack and opens the browser.
+4. For later launches, the existing admin is detected and the server starts without asking to create it again.
 
-MACOS: install Python 3 if necessary, then run Run-NutriTrack.command from Terminal. macOS may ask you to allow it.
+You can also run `python server.py --ensure-admin` to create the first administrator only when one does not already exist. `python server.py --create-admin` explicitly fails if an administrator already exists. Account passwords must be 12–256 characters.
 
-ADMIN DASHBOARD: while signed in as an administrator, open http://127.0.0.1:<the-port-shown>/admin.html (use the actual local URL printed by the launcher). The dashboard can create users, dietitians and administrators; change account roles; disable/enable accounts; delete accounts; and assign each user to one active dietitian. User-role enforcement is performed by the server. You cannot remove or demote your own account or the last active administrator. Non-admin accounts cannot open the admin dashboard or its API. Dietitians sign in through the same login page and are redirected to their separate `/dietitian.html` workspace. They can only view users assigned by an admin and can save recommendations for those users. Users can read recommendations at `/recommendations.html`.
+ACCOUNT ROLES AND SIGN-UP
+- **Administrator:** created only by the one-time terminal bootstrap. Admins manage accounts, roles, and dietitian assignments from `/admin.html`.
+- **User:** public sign-up at `/signup` always creates a normal user account. It never grants administrator or dietitian permissions. Users can log food, set goals, view history/reports, and read dietitian notes at `/recommendations.html`.
+- **Dietitian:** can only be created/promoted by an administrator. Dietitians sign in at `/login` and are redirected to `/dietitian.html`. They can view only active users assigned to them and can post recommendations for those assigned users.
+- Each active user can have one assigned dietitian. Admins can assign, replace, or remove that assignment. Role/assignment permissions are checked by the server, not just by hiding pages.
 
-No pip packages, Node.js or database service are needed. The local server binds to 127.0.0.1 and tries the next port if 8765 is occupied. Ctrl+C stops it.
+DATA ISOLATION AND SYNC
+- Browser nutrition keys are partitioned by account username for both user and admin sessions. Switching accounts in the same browser restores that account's own namespace instead of reusing the previous account's active data.
+- User nutrition snapshots are sent to the local server while that user has the tracker open. Dietitians can read the last synced snapshot for users assigned to them. Recommendations are stored locally and shown to the relevant user.
+- Existing unscoped browser data is migrated only for a user account when no account-specific data already exists in that browser. It is not copied into an admin account or another account once account namespaces exist.
+- The sync is a local demo feature, not real-time collaboration. The tracker must be open and signed in for new nutrition changes to sync.
 
-AUTHENTICATION: accounts are stored in .nutritrack/auth.sqlite3. Passwords use PBKDF2-HMAC-SHA256 with random salts; sessions use an HttpOnly, SameSite cookie, expire after 12 hours, and failed attempts are rate-limited. This is a local-machine login gate, not public internet authentication. Do not expose this server to a network.
+ADMIN DASHBOARD
+Open `/admin.html` while signed in as admin. You can create accounts, change roles, enable/disable/delete accounts, and assign users to dietitians. The server prevents non-admins from using admin APIs and prevents dietitians from reading unassigned users. You cannot remove/demote your own admin account or remove the last active admin.
 
-DATA PRIVACY / LIMITATIONS: each user account's tracker data is partitioned in that browser's LocalStorage and a snapshot is synced to the local SQLite database about every five seconds while the tracker is open. The assigned dietitian can view that snapshot and write recommendations, which are stored in SQLite and shown to the user on the Dietitian notes page. Existing browser data is migrated to the first account that opens the tracker on that browser. Snapshots only update while the user is signed in and the tracker is open; this is a local classroom/demo prototype, not a clinical record system. The login gate does not encrypt browser storage or replace OS security. For public multi-user deployment, use a maintained production server, HTTPS, CSRF protections, secure session management, server-side authorization, backups and privacy controls.
+AUTHENTICATION
+Passwords are stored as PBKDF2-HMAC-SHA256 hashes with random salts. Sessions use an HttpOnly, SameSite cookie and expire after 12 hours; failed sign-in attempts are rate-limited. Accounts and dietitian recommendations are stored in `.nutritrack/auth.sqlite3`. Do not delete that file unless you intend to remove local accounts and recommendations.
 
-FORGOT PASSWORD: stop the server and delete .nutritrack/auth.sqlite3 to reset local account setup. This removes all local login accounts but does not erase nutrition data in browser storage.
+IMPORTANT LIMITATIONS
+This is a local classroom/demo prototype, not a production medical-record platform. Nutrition snapshots sync from the browser into a local SQLite file; there is no hosted multi-device database service. Browser LocalStorage is not encrypted, and this login gate does not replace OS security. Before public deployment, use HTTPS, CSRF protection, secure server-side sessions, a maintained production server, robust authorization, data export/deletion policies, backups, and appropriate privacy controls.
+
+TROUBLESHOOTING
+- If the launcher asks you to create an administrator even though one should exist, check that you are running the same repository folder and that `.nutritrack/auth.sqlite3` is present.
+- If you have an old installation where the first account was automatically made admin, that existing account remains admin for compatibility. New sign-ups are always normal users.
+- Stop the server with Ctrl+C in the terminal.
