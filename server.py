@@ -69,12 +69,17 @@ def auth_page(mode, error=''):
 
 def admin_setup_page(error='', recovery=False):
     heading = 'Recover administrator access' if recovery else 'First-time admin setup'
-    intro = 'Reset the password for an existing active administrator on this computer. Anyone with local access to this page can do this, so use it only on your own machine.' if recovery else 'Create the administrator account for this local NutriTrack installation. This page works only while no active administrator exists.'
-    button = 'Reset administrator password' if recovery else 'Create administrator'
+    intro = ('Reset the password for an existing active administrator on this computer. This is a local-only recovery tool; use it only on your own machine.' if recovery else 'Create the first administrator. NutriTrack will also create a test dietitian account if the username is available, and show its generated password once.')
+    button = 'Reset password and check demo account' if recovery else 'Create admin and demo dietitian'
     err = '<p class="err">'+esc(error)+'</p>' if error else ''
-    html = '''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NutriTrack Admin Setup</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f2ec;color:#222;font:16px system-ui;padding:20px}main{width:min(100%,460px);padding:30px;background:white;border:1px solid #ddd;border-radius:16px;box-shadow:0 18px 55px #0000000d}.brand{font-size:2rem;font-weight:900;letter-spacing:-.06em}.brand span{color:#ff4d1a}p{color:#666;line-height:1.5}label{display:block;margin-top:16px;font-size:.9rem;font-weight:650}input{display:block;width:100%;padding:12px;margin-top:6px;border:1px solid #bbb;border-radius:8px;font:inherit}button{width:100%;padding:13px;margin-top:22px;background:#222;color:white;border:0;border-radius:8px;font:inherit;font-weight:750;cursor:pointer}.err{color:#a21d17;background:#fff0ed;padding:10px;border-radius:8px}a{color:#b83712;font-weight:700}</style></head><body><main><div class="brand">NutriTrack<span>.</span></div><h1>'''+heading+'''</h1><p>'''+intro+'''</p>'''+err+'''<form method="post" action="/auth/admin-setup"><label>Admin username<input name="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.-]+" required autocomplete="username"></label><label>Password (at least 12 characters)<input name="password" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label><label>Confirm password<input name="confirm" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label><button>'''+button+'''</button></form><p><a href="/login">Back to sign in</a></p></main></body></html>'''
+    html = '''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NutriTrack Admin Setup</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f2ec;color:#222;font:16px system-ui;padding:20px}main{width:min(100%,460px);padding:30px;background:white;border:1px solid #ddd;border-radius:16px;box-shadow:0 18px 55px #0000000d}.brand{font-size:2rem;font-weight:900;letter-spacing:-.06em}.brand span{color:#ff4d1a}p{color:#666;line-height:1.5}label{display:block;margin-top:16px;font-size:.9rem;font-weight:650}input{display:block;width:100%;padding:12px;margin-top:6px;border:1px solid #bbb;border-radius:8px;font:inherit}button{width:100%;padding:13px;margin-top:22px;background:#222;color:white;border:0;border-radius:8px;font:inherit;font-weight:750;cursor:pointer}.err{color:#a21d17;background:#fff0ed;padding:10px;border-radius:8px}a{color:#b83712;font-weight:700}</style></head><body><main><div class="brand">NutriTrack<span>.</span></div><h1>'''+heading+'''</h1><p>'''+intro+'''</p>'''+err+'''<form method="post" action="/auth/admin-setup"><label>Admin username<input name="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.-]+" required autocomplete="username"></label><label>New password (at least 12 characters)<input name="password" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label><label>Confirm password<input name="confirm" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label><button>'''+button+'''</button></form><p><a href="/login">Back to sign in</a></p></main></body></html>'''
     return html.encode()
-\ndef session(handler):
+
+def setup_result_page(message, dietitian_password=None):
+    creds = ('<p><b>Demo dietitian username:</b> dietitian<br><b>Generated one-time password:</b> <code>'+esc(dietitian_password)+'</code></p><p>Save this password now; it will not be shown again. Change it before using real data.</p>' if dietitian_password else '<p>A dietitian account already exists, so its password was left unchanged.</p>')
+    html = '''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NutriTrack setup complete</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f2ec;color:#222;font:16px system-ui;padding:20px}main{width:min(100%,500px);padding:30px;background:white;border:1px solid #ddd;border-radius:16px}p{line-height:1.6;color:#555}code{word-break:break-all;background:#f1eee7;padding:4px}a{display:inline-block;margin-top:14px;background:#222;color:white;padding:12px 18px;border-radius:8px;text-decoration:none}</style></head><body><main><h1>NutriTrack is ready</h1><p>'''+esc(message)+'''</p>'''+creds+'''<a href="/login">Go to sign in</a></main></body></html>'''
+    return html.encode()
+def session(handler):
     c=http.cookies.SimpleCookie()
     try: c.load(handler.headers.get('Cookie','')); token=c[COOKIE].value
     except (http.cookies.CookieError, KeyError): return None
@@ -304,9 +309,9 @@ class Handler(SimpleHTTPRequestHandler):
         form=parse_qs(raw.decode('utf-8','replace'),keep_blank_values=True)
         name=form.get('username',[''])[0].strip(); pw=form.get('password',[''])[0]; ip=self.client_address[0]
         if p=='/auth/admin-setup':
-            # This recovery endpoint is intentionally available only on the loopback-only local app.
+            # Recovery is intended for the loopback-only local application.
             origin=self.headers.get('Origin','')
-            if origin and origin not in ('http://'+self.headers.get('Host',''), 'https://'+self.headers.get('Host','')):
+            if origin and origin != 'http://'+self.headers.get('Host',''):
                 return self.send_bytes(403,admin_setup_page('Open this page directly from the local NutriTrack address.'),'text/html; charset=utf-8')
             if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.send_bytes(400,admin_setup_page('Username must be 3–40 letters, numbers, dots, underscores or hyphens.'),'text/html; charset=utf-8')
             if len(pw)<12 or len(pw)>256:return self.send_bytes(400,admin_setup_page('Password must be 12–256 characters.'),'text/html; charset=utf-8')
@@ -316,12 +321,20 @@ class Handler(SimpleHTTPRequestHandler):
                 existing=db.execute("SELECT username FROM users WHERE role='admin' AND active=1 LIMIT 1").fetchone()
                 if existing:
                     admin=db.execute("SELECT username FROM users WHERE username=? AND role='admin' AND active=1",(name,)).fetchone()
-                    if not admin:return self.send_bytes(400,admin_setup_page('That username is not an active administrator. Enter the existing admin username.',recovery=True),'text/html; charset=utf-8')
+                    if not admin:return self.send_bytes(400,admin_setup_page('Enter the username of an existing active administrator.',recovery=True),'text/html; charset=utf-8')
                     db.execute("UPDATE users SET salt=?,digest=? WHERE username=?",(salt,digest,name))
+                    message='Administrator password reset successfully.'
                 else:
                     try: db.execute("INSERT INTO users(username,salt,digest,role,active,created_at) VALUES(?,?,?,'admin',1,CURRENT_TIMESTAMP)",(name,salt,digest))
-                    except sqlite3.IntegrityError:return self.send_bytes(409,admin_setup_page('That username already exists; sign in with it or choose another.'),'text/html; charset=utf-8')
-            return self.go('/login')
+                    except sqlite3.IntegrityError:return self.send_bytes(409,admin_setup_page('That username already exists with another role; choose a different username.'),'text/html; charset=utf-8')
+                    message='Administrator account created successfully.'
+                dietitian_password=None
+                existing_dietitian=db.execute("SELECT username FROM users WHERE username='dietitian'").fetchone()
+                if not existing_dietitian:
+                    dietitian_password=secrets.token_urlsafe(18)
+                    dsalt,ddigest=derive(dietitian_password)
+                    db.execute("INSERT INTO users(username,salt,digest,role,active,created_at) VALUES('dietitian',?,?, 'dietitian',1,CURRENT_TIMESTAMP)",(dsalt,ddigest))
+            return self.send_bytes(200,setup_result_page(message,dietitian_password),'text/html; charset=utf-8')
         if p=='/auth/signup':
             if not re.fullmatch(r'[A-Za-z0-9_.-]{3,40}',name):return self.send_bytes(400,auth_page('signup','Username must be 3–40 letters, numbers, dots, underscores or hyphens.'),'text/html; charset=utf-8')
             if len(pw)<12 or len(pw)>256:return self.send_bytes(400,auth_page('signup','Password must be 12–256 characters.'),'text/html; charset=utf-8')
