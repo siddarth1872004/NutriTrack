@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="NutriTrack">
   <meta name="theme-color" content="#f4f0e6">
-  <meta name="description" content="NutriTrack — a privacy-first, offline calorie, macro and weight tracker. All data stays in your browser.">
+  <meta name="description" content="NutriTrack — your nutrition tracker, synced securely to your account.">
   <meta property="og:title" content="NutriTrack">
-  <meta property="og:description" content="Privacy-first calorie, macro and weight tracker that runs entirely in your browser.">
+  <meta property="og:description" content="Track calories, macros, meals, water and weight with your NutriTrack account.">
   <meta property="og:type" content="website">
   <title>NutriTrack</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2.0.0">
@@ -749,59 +749,59 @@
   catch (_) { showError("NutriTrack is unavailable", "Could not reach the NutriTrack server. Check your connection and reload."); return; }
   if (response.status === 401) { location.replace("/login"); return; }
   if (!response.ok) { showError("NutriTrack could not start", "The server could not verify your account. Please try again later."); return; }
-  let result;
-  try { result = await response.json(); } catch (_) { showError("Invalid server response", "Please reload or sign in again."); return; }
+  const result = await response.json();
   const user = result.user;
   if (!user) { location.replace("/login"); return; }
   if (user.role === "admin") { location.replace("/admin"); return; }
   if (user.role === "dietitian") { location.replace("/dietitian"); return; }
 
-  const prefix = "nutritrack_account:" + user.username + ":";
-  const relevant = key => typeof key === "string" && (key.startsWith("nutrilog_") || key === "nutriMemory");
-  const store = window.localStorage;
-  const rawGet = Storage.prototype.getItem, rawSet = Storage.prototype.setItem, rawRemove = Storage.prototype.removeItem, rawKey = Storage.prototype.key;
-  const physicalKeys = () => { const keys=[]; for(let i=0;i<store.length;i++){const k=rawKey.call(store,i);if(k!==null)keys.push(k);}return keys; };
-  const accountKeys = () => physicalKeys().filter(k=>k.startsWith(prefix)).map(k=>k.slice(prefix.length));
-  const legacyKeys = physicalKeys().filter(relevant);
-  const hasAccountData = physicalKeys().some(k=>k.startsWith("nutritrack_account:"));
-  const responseData = await fetch("/api/my-data", {credentials:"same-origin",cache:"no-store"});
-  if (!responseData.ok) { showError("Could not load your data", "Your saved tracker data could not be loaded from your account. No local data was removed. Please reload or sign in again."); return; }
+  let responseData;
+  try { responseData = await fetch("/api/my-data", {credentials:"same-origin",cache:"no-store"}); }
+  catch (_) { showError("Could not load your data", "NutriTrack could not reach the database. Your account data was not changed."); return; }
+  if (!responseData.ok) { showError("Could not load your data", "Your tracker could not load its account data from the database. Check the Vercel deployment and database connection, then reload."); return; }
   const saved = await responseData.json();
-  const snapshot = saved.snapshot && typeof saved.snapshot === "object" ? saved.snapshot : null;
-  if (snapshot) {
-    Object.entries(snapshot).forEach(([key,value]) => {
-      if (relevant(key) && typeof value === "string") rawSet.call(store,prefix+key,value);
-    });
-  } else if (!hasAccountData && legacyKeys.length) {
-    legacyKeys.forEach(key => rawSet.call(store,prefix+key,rawGet.call(store,key)));
+  const snapshot = saved.snapshot && typeof saved.snapshot === "object" ? saved.snapshot : {};
+  const relevant = key => typeof key === "string" && (key.startsWith("nutrilog_") || key === "nutriMemory");
+  const memory = new Map(Object.entries(snapshot).filter(([key,value]) => relevant(key) && typeof value === "string"));
+  let syncTimer = null, syncing = false, dirty = false;
+  const store = {
+    getItem(key) { const k=String(key); return memory.has(k) ? memory.get(k) : null; },
+    setItem(key,value) { memory.set(String(key),String(value)); dirty=true; scheduleSync(); },
+    removeItem(key) { if(memory.delete(String(key))) { dirty=true; scheduleSync(); } },
+    keys() { return Array.from(memory.keys()); }
+  };
+  window.nutriStore = store;
+  function scheduleSync() {
+    if(syncTimer) clearTimeout(syncTimer);
+    syncTimer=setTimeout(()=>syncSnapshot(),350);
+    const pulse=document.getElementById("savedPulse");
+    if(pulse) pulse.classList.add("active");
   }
-  legacyKeys.forEach(key=>rawRemove.call(store,key));
-  window.__nutritrackStoragePrefix=prefix;
-  window.__nutritrackStorageKeys=()=>accountKeys().filter(relevant);
-  Storage.prototype.getItem=function(key){const name=String(key);return rawGet.call(this,this===store&&relevant(name)?prefix+name:key);};
-  Storage.prototype.setItem=function(key,value){const name=String(key);return rawSet.call(this,this===store&&relevant(name)?prefix+name:key,value);};
-  Storage.prototype.removeItem=function(key){const name=String(key);return rawRemove.call(this,this===store&&relevant(name)?prefix+name:key);};
-
-  let syncing=false;
-  async function syncSnapshot(){
-    if(syncing)return; syncing=true;
-    try{
-      const payload={}; accountKeys().filter(relevant).forEach(key=>{payload[key]=rawGet.call(store,prefix+key);});
+  async function syncSnapshot() {
+    if(syncing || !dirty) return;
+    syncing=true; dirty=false;
+    try {
+      const payload=Object.fromEntries(memory.entries());
       const r=await fetch("/api/my-data",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({payload})});
-      if(!r.ok) console.warn("Nutrition data sync failed:",r.status);
-    }catch(error){console.warn("Nutrition data sync deferred",error);}
-    finally{syncing=false;}
+      if(!r.ok) { dirty=true; console.error("Nutrition data sync failed:",r.status); }
+    } catch(error) { dirty=true; console.error("Nutrition data sync deferred",error); }
+    finally {
+      syncing=false;
+      const pulse=document.getElementById("savedPulse");
+      if(pulse) pulse.classList.toggle("active",dirty);
+      if(dirty && !syncTimer) syncTimer=setTimeout(()=>{syncTimer=null;syncSnapshot();},2000);
+    }
   }
   const name=document.getElementById("accountName"), role=document.getElementById("accountRole");
-  if(name)name.textContent=user.username;if(role)role.textContent=String(user.role).toUpperCase();
-  const logout=document.querySelector('a.account-logout'); if(logout){logout.href="/api/auth/logout";logout.addEventListener("click",async e=>{e.preventDefault();await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin"});location.href="/login";});}
-  await import("./js/app.js?v=2.6.0");
-  await syncSnapshot();
-  setInterval(syncSnapshot,5000);
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncSnapshot();});
-  window.addEventListener("pagehide",()=>{syncSnapshot();});
+  if(name)name.textContent=user.username;
+  if(role)role.textContent=String(user.role).toUpperCase();
+  const logout=document.querySelector('a.account-logout');
+  if(logout){logout.href="/api/auth/logout";logout.addEventListener("click",async e=>{e.preventDefault();try{await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin"});}finally{location.href="/login";}});}
+  await import("./js/app.js?v=2.7.0");
   const header=document.querySelector(".header-right");
   if(header&&!document.getElementById("recommendationsLink")){const link=document.createElement("a");link.id="recommendationsLink";link.href="/recommendations.html";link.className="account-logout";link.textContent="Dietitian notes";header.prepend(link);}
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncSnapshot();});
+  window.addEventListener("pagehide",()=>{if(dirty)syncSnapshot();});
 })().catch(error=>{console.error(error);document.body.innerHTML='<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1>NutriTrack could not start</h1><p>Unexpected startup error. Please reload or sign in again.</p><p><a href="/login">Sign in</a></p></main>';});
 </script>
 </body>
