@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS users(id BIGSERIAL PRIMARY KEY,username VARCHAR(40) NOT NULL UNIQUE,password_hash TEXT NOT NULL,role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user','dietitian','admin')),active BOOLEAN NOT NULL DEFAULT TRUE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),CHECK(username ~ '^[A-Za-z0-9_.-]{3,40}$'));
+CREATE TABLE IF NOT EXISTS sessions(id BIGSERIAL PRIMARY KEY,user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,token_hash TEXT NOT NULL UNIQUE,expires_at TIMESTAMPTZ NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expires_at);
+CREATE TABLE IF NOT EXISTS foods(id BIGSERIAL PRIMARY KEY,source_key TEXT NOT NULL UNIQUE,name TEXT NOT NULL,category TEXT NOT NULL,unit TEXT NOT NULL,base NUMERIC NOT NULL,calories NUMERIC NOT NULL,protein NUMERIC NOT NULL,carbs NUMERIC NOT NULL,fat NUMERIC NOT NULL,serving_size NUMERIC NOT NULL,serving_label TEXT NOT NULL,countable_unit_name TEXT,countable_grams_each NUMERIC,source_data JSONB NOT NULL DEFAULT '{}'::jsonb,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE INDEX IF NOT EXISTS foods_name_search_idx ON foods USING GIN(to_tsvector('simple',name));
+CREATE INDEX IF NOT EXISTS foods_category_idx ON foods(category);
+CREATE TABLE IF NOT EXISTS dietitian_assignments(user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,dietitian_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),CHECK(user_id<>dietitian_id));
+CREATE INDEX IF NOT EXISTS dietitian_assignments_dietitian_idx ON dietitian_assignments(dietitian_id);
+CREATE TABLE IF NOT EXISTS nutrition_snapshots(user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,payload JSONB NOT NULL DEFAULT '{}'::jsonb,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS recommendations(id BIGSERIAL PRIMARY KEY,user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,dietitian_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,message TEXT NOT NULL CHECK(char_length(message) BETWEEN 1 AND 10000),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE INDEX IF NOT EXISTS recommendations_user_created_idx ON recommendations(user_id,created_at DESC);
