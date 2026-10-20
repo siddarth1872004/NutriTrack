@@ -773,7 +773,7 @@
   window.nutriStore = store;
   function scheduleSync() {
     if(syncTimer) clearTimeout(syncTimer);
-    syncTimer=setTimeout(()=>syncSnapshot(),350);
+    syncTimer=setTimeout(()=>{syncTimer=null;syncSnapshot();},350);
     const pulse=document.getElementById("savedPulse");
     if(pulse) pulse.classList.add("active");
   }
