@@ -1,39 +1,29 @@
 # NutriTrack
 
-NutriTrack is a nutrition and weight-tracking application. The repository is being migrated from a static HTML/JavaScript + local Python/SQLite setup to a **Next.js App Router application with a hosted PostgreSQL database**, suitable for Vercel.
+NutriTrack is a nutrition and weight-tracking application migrating from static HTML/JavaScript and a local Python/SQLite setup to **Next.js App Router on Vercel with Supabase PostgreSQL**.
 
-## Vercel / Next.js setup
+## Quick start
 
-See **[README-VERCEL.md](README-VERCEL.md)** for the complete deployment guide, database schema, food import, and initial account seeding instructions.
+1. Create a Supabase project and copy its PostgreSQL connection URI.
+2. Set `DATABASE_URL` in your local shell (server-side only).
+3. Run `npm install`.
+4. Run `npm run db:import-foods`. It applies `db/schema.sql` and imports the complete `js/foods.js` catalogue.
+5. Seed your admin and dietitian accounts with `npm run db:seed-accounts`, following [README-VERCEL.md](README-VERCEL.md).
+6. Run `npm run dev` locally, or deploy the repository through Vercel with `DATABASE_URL` configured.
 
-### Quick start
+## Food importer
 
-1. Create a hosted PostgreSQL database (Neon is a suitable option).
-2. Set `DATABASE_URL` locally.
-3. Install dependencies with `npm install`.
-4. Run `npm run db:import-foods`. This applies `db/schema.sql` and imports the full `js/foods.js` food catalogue into PostgreSQL.
-5. Seed initial admin and dietitian accounts using the environment-driven `npm run db:seed-accounts` script as documented in README-VERCEL.md.
-6. Run `npm run dev` locally, or import the repository into Vercel and deploy with its standard Next.js build.
+`scripts/import-foods.mjs` imports the default `FOOD_DB` export from `js/foods.js`. It validates required fields, stores nutrition values in typed SQL columns, preserves the full source record in JSONB, and uses the original JS key as a unique upsert key. Re-running it won't duplicate matching foods.
 
-## SQL food catalogue importer
+## Migration status
 
-The script at `scripts/import-foods.mjs` imports the default `FOOD_DB` export from `js/foods.js`. It validates each entry, stores numeric nutrition fields in typed PostgreSQL columns, preserves each full source object in a JSONB column, and uses the original JS key as a unique upsert key. You can safely run it more than once without duplicating the same foods.
+The new foundation includes PostgreSQL schema, bcrypt password hashing, HttpOnly session cookies, authentication routes, food search, basic role landing pages, and API endpoints for admin, dietitian, recommendations, and user snapshots.
 
-```sh
-npm install
-export DATABASE_URL='your-postgres-connection-string'
-npm run db:import-foods
-```
+**Not every old tracker feature has been migrated yet.** Meal logging, weight charts, LocalStorage import, and complete admin/dietitian interfaces still need to be ported. Existing local SQLite accounts and browser data are not automatically uploaded. Keep the old local app and backups until the migration is complete.
 
-## Current migration status
+## Security
 
-The Next.js foundation includes a PostgreSQL schema, secure password hashing, HttpOnly session cookies, sign-up/sign-in, food search, role-specific landing pages, admin user creation and dietitian assignment APIs, dietitian client/recommendation APIs, and user nutrition snapshot APIs.
-
-**Not all old tracker features have been ported yet.** The original static pages and Python local server remain in the repository while the full meal logger, weight charts, LocalStorage import, and complete admin/dietitian interface are migrated. Existing local SQLite accounts and browser nutrition data are not automatically uploaded to the hosted database. Do not retire the local version until the remaining UI and data migration are complete.
-
-## Security notes
-
-- Do not commit database connection strings or passwords.
-- Public sign-up can create only standard user accounts; privileged roles are provisioned separately.
-- Use unique, strong admin and dietitian passwords. No shared demo password is hardcoded in the repository.
-- Configure Vercel's `DATABASE_URL` environment variable for the correct deployment environment.
+- Never commit Supabase connection strings or passwords.
+- Keep `DATABASE_URL` server-side; never name it `NEXT_PUBLIC_DATABASE_URL`.
+- Use unique strong passwords for admin and dietitian accounts.
+- Public sign-up creates standard user accounts only.
