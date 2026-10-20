@@ -9,13 +9,13 @@ import { createFoodMemory } from './memory.js?v=2.0.0';
 
 function storageKeys() {
   if (typeof window.__nutritrackStorageKeys === 'function') return window.__nutritrackStorageKeys();
-  return Object.keys(localStorage);
+  return window.nutriStore.keys();
 }
 
 /* ─── Custom foods ─────────────────────────────────── */
 const storage = {
-  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
-  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  get(k, d) { try { return JSON.parse(window.nutriStore.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v) { window.nutriStore.setItem(k, JSON.stringify(v)); }
 };
 let USER_DB      = storage.get('nutrilog_userfoods', {});
 const foodMemory = createFoodMemory(FOOD_DB, USER_DB);
@@ -28,10 +28,10 @@ let profile      = _load('nutrilog_profile')      || { age:'', weight:'', height
 let savedFoods   = _load('nutrilog_savedfoods')   || _load('nutriMemory') || [];
 let recentFoods  = _load('nutrilog_recents')      || [];
 let history      = _load('nutrilog_history')      || {};   // { "YYYY-MM-DD": [entries] }
-let waterGoal    = parseInt(localStorage.getItem('nutrilog_watergoal') || '2500');
+let waterGoal    = parseInt(window.nutriStore.getItem('nutrilog_watergoal') || '2500');
 let mealGroups   = _load('nutrilog_mealgroups')   || ['Breakfast','Lunch','Dinner','Snacks'];
 let streakData   = _load('nutrilog_streak')       || { count:0, lastDate:'' };
-let theme        = localStorage.getItem('nutrilog_theme') || 'light';
+let theme        = window.nutriStore.getItem('nutrilog_theme') || 'light';
 let bodyWeight   = _load('nutrilog_bodyweight')   || [];
 let mealTemplates= _load('nutrilog_meal_templates')|| {};
 
@@ -40,7 +40,7 @@ let logEntries     = [];
 let dailyTotals    = { cal:0, prot:0, carb:0, fat:0 };
 let waterMl        = 0;
 let caloriesBurned = 0;
-let currentMeal    = localStorage.getItem('nutrilog_curmeal') || autoDetectMeal();
+let currentMeal    = window.nutriStore.getItem('nutrilog_curmeal') || autoDetectMeal();
 
 /* ─── UI state ─────────────────────────────────────── */
 let currentFood    = null;
@@ -69,15 +69,15 @@ const state = {
 
 /* ─── Tiny helpers ─────────────────────────────────── */
 function _save(k, v) {
-  try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {
+  try { window.nutriStore.setItem(k, JSON.stringify(v)); } catch(e) {
     // quota: evict oldest history entry and retry
     const keys = Object.keys(history).sort();
     if (keys.length) { delete history[keys[0]]; _save('nutrilog_history', history); }
-    try { localStorage.setItem(k, JSON.stringify(v)); } catch(_) {}
+    try { window.nutriStore.setItem(k, JSON.stringify(v)); } catch(_) {}
   }
 }
 function _load(k) {
-  try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e) { return null; }
+  try { const v = window.nutriStore.getItem(k); return v ? JSON.parse(v) : null; } catch(e) { return null; }
 }
 function toDateKey(d) {
   // Always store/read as YYYY-MM-DD for reliable sort and cross-browser parsing
@@ -136,7 +136,7 @@ window.addEventListener('orientationchange', syncViewportUnit, { passive: true }
 /* ─── Init: day rollover + load today ─────────────── */
 (function init() {
   const today   = todayKey();
-  const saved   = localStorage.getItem('nutrilog_date');
+  const saved   = window.nutriStore.getItem('nutrilog_date');
 
   if (saved && saved !== today) {
     // Archive previous day
@@ -149,20 +149,20 @@ window.addEventListener('orientationchange', syncViewportUnit, { passive: true }
       while (keys.length > 90) delete history[keys.shift()];
       _save('nutrilog_history', history);
     }
-    localStorage.setItem('nutrilog_date', today);
-    localStorage.removeItem('nutrilog_log_today');
-    localStorage.removeItem('nutrilog_water_today');
-    localStorage.removeItem('nutrilog_water_undo');
-    localStorage.removeItem('nutrilog_burned_today');
+    window.nutriStore.setItem('nutrilog_date', today);
+    window.nutriStore.removeItem('nutrilog_log_today');
+    window.nutriStore.removeItem('nutrilog_water_today');
+    window.nutriStore.removeItem('nutrilog_water_undo');
+    window.nutriStore.removeItem('nutrilog_burned_today');
     _updateStreak(today);
     waterMl = caloriesBurned = 0;
     waterUndoStack = [];
   } else {
-    if (!saved) localStorage.setItem('nutrilog_date', today);
+    if (!saved) window.nutriStore.setItem('nutrilog_date', today);
     logEntries     = _load('nutrilog_log_today') || [];
-    waterMl        = parseInt(localStorage.getItem('nutrilog_water_today') || '0');
+    waterMl        = parseInt(window.nutriStore.getItem('nutrilog_water_today') || '0');
     waterUndoStack = _load('nutrilog_water_undo') || [];
-    caloriesBurned = parseInt(localStorage.getItem('nutrilog_burned_today') || '0');
+    caloriesBurned = parseInt(window.nutriStore.getItem('nutrilog_burned_today') || '0');
   }
   recomputeTotals();
 
@@ -215,7 +215,7 @@ function applyTheme() {
 applyTheme();
 g('themeBtn')?.addEventListener('click', () => {
   theme = theme==='dark' ? 'light' : 'dark';
-  localStorage.setItem('nutrilog_theme', theme);
+  window.nutriStore.setItem('nutrilog_theme', theme);
   applyTheme();
 });
 
@@ -515,7 +515,7 @@ function renderMealSelector() {
   const sel=g('mealSelector'); if(!sel) return;
   sel.innerHTML=mealGroups.map(m=>`<option value="${escAttr(m)}"${m===currentMeal?' selected':''}>${escHtml(m)}</option>`).join('');
 }
-g('mealSelector')?.addEventListener('change',function(){currentMeal=this.value;localStorage.setItem('nutrilog_curmeal',currentMeal);});
+g('mealSelector')?.addEventListener('change',function(){currentMeal=this.value;window.nutriStore.setItem('nutrilog_curmeal',currentMeal);});
 
 /* ══════════════════════════════════════════════════════
    LOG FOOD
@@ -929,7 +929,7 @@ function addWater(ml, { trackUndo = true } = {}){
     if (waterUndoStack.length > 30) waterUndoStack.shift();
     _save('nutrilog_water_undo', waterUndoStack);
   }
-  localStorage.setItem('nutrilog_water_today',waterMl);
+  window.nutriStore.setItem('nutrilog_water_today',waterMl);
   _save('nutrilog_water_undo',waterUndoStack);
   updateWaterUI();
 
@@ -962,7 +962,7 @@ function setWaterGoalQuick() {
   const next = parseInt(prompt('Set daily water goal (ml):', String(waterGoal)));
   if (!Number.isFinite(next)) return;
   waterGoal = Math.max(100, next);
-  localStorage.setItem('nutrilog_watergoal', waterGoal);
+  window.nutriStore.setItem('nutrilog_watergoal', waterGoal);
   updateWaterUI();
   showToast(`Water goal set to ${(waterGoal/1000).toFixed(1).replace(/\.0$/,'')}L`);
 }
@@ -978,14 +978,14 @@ g('burnBtn')?.addEventListener('click',()=>{setVal('burnInput','');g('burnModal'
 g('saveBurnBtn')?.addEventListener('click',()=>{
   const v=parseInt(g('burnInput')?.value)||0;
   if(v<0){showToast('Enter a positive number','warn');return;}
-  caloriesBurned=v; localStorage.setItem('nutrilog_burned_today',caloriesBurned);
+  caloriesBurned=v; window.nutriStore.setItem('nutrilog_burned_today',caloriesBurned);
   g('burnModal')?.classList.remove('open'); updateTotals(); showToast(`${v} kcal exercise logged ✓`);
 });
 g('cancelBurnBtn')?.addEventListener('click',()=>g('burnModal')?.classList.remove('open'));
 /* ── Unlog burned calories ─────────────────────────── */
 function unlogBurn() {
   caloriesBurned = 0;
-  localStorage.setItem('nutrilog_burned_today', 0);
+  window.nutriStore.setItem('nutrilog_burned_today', 0);
   updateTotals();
   showToast('Exercise calories removed');
 }
@@ -1009,7 +1009,7 @@ function calcActivityBurn(){
 }
 window.calcActivityBurn=calcActivityBurn;
 g('calcActivityBtn')?.addEventListener('click',calcActivityBurn);
-g('logActivityBurnBtn')?.addEventListener('click',()=>{const kcal=calcActivityBurn();caloriesBurned+=kcal;localStorage.setItem('nutrilog_burned_today',caloriesBurned);updateTotals();g('burnCalcModal')?.classList.remove('open');showToast(`${kcal} kcal burned logged ✓`);});
+g('logActivityBurnBtn')?.addEventListener('click',()=>{const kcal=calcActivityBurn();caloriesBurned+=kcal;window.nutriStore.setItem('nutrilog_burned_today',caloriesBurned);updateTotals();g('burnCalcModal')?.classList.remove('open');showToast(`${kcal} kcal burned logged ✓`);});
 g('burnCalcBtn')?.addEventListener('click',()=>{g('burnCalcModal')?.classList.add('open');});
 g('closeBurnCalcModal')?.addEventListener('click',()=>g('burnCalcModal')?.classList.remove('open'));
 g('burnCalcModal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
@@ -1284,7 +1284,7 @@ g('saveGoalsBtn')?.addEventListener('click',()=>{
   goals.carb=Math.max(1,parseInt(g('goalCarbInput').value)||250);
   goals.fat=Math.max(1,parseInt(g('goalFatInput').value)||65);
   waterGoal=Math.max(100,parseInt(g('goalWaterInput').value)||2500);
-  _save('nutrilog_goals',goals); localStorage.setItem('nutrilog_watergoal',waterGoal);
+  _save('nutrilog_goals',goals); window.nutriStore.setItem('nutrilog_watergoal',waterGoal);
   g('goalsModal')?.classList.remove('open'); updateTotals(); updateWaterUI();
   setText('criGoal', goals.cal + ' kcal');
   setText('goalProtLbl', goals.prot + 'g');
@@ -1642,7 +1642,7 @@ g('importFile')?.addEventListener('change',function(e){
       if(!confirm('Import this validated backup and merge it with current data? Export a backup of your current data first if needed.'))return;
       if(data.profile)persistProfile({...profile,...data.profile});
       if(data.goals){Object.assign(goals,data.goals);_save('nutrilog_goals',goals);}
-      if(data.waterGoal!==undefined){waterGoal=Number(data.waterGoal);localStorage.setItem('nutrilog_watergoal',String(waterGoal));}
+      if(data.waterGoal!==undefined){waterGoal=Number(data.waterGoal);window.nutriStore.setItem('nutrilog_watergoal',String(waterGoal));}
       if(data.savedFoods){savedFoods=data.savedFoods;persistMemory();}
       if(data.history){Object.assign(history,data.history);_save('nutrilog_history',history);}
       if(data.userFoods){Object.assign(USER_DB,data.userFoods);persistUserDB();}
@@ -1650,7 +1650,7 @@ g('importFile')?.addEventListener('change',function(e){
       if(data.bodyWeight){bodyWeight=[...bodyWeight,...data.bodyWeight].filter((v,i,a)=>a.findIndex(x=>x.date===v.date)===i).sort((a,b)=>a.date.localeCompare(b.date));_save('nutrilog_bodyweight',bodyWeight);}
       if(data.streak&&Number(data.streak.count)>Number(streakData.count))streakData=data.streak;
       _save('nutrilog_streak',streakData);
-      if(data.today?.entries&&data.today.date===todayKey()){logEntries=data.today.entries;waterMl=Number(data.today.waterMl)||0;caloriesBurned=Number(data.today.burned)||0;persistLog();localStorage.setItem('nutrilog_water_today',waterMl);localStorage.setItem('nutrilog_burned_today',caloriesBurned);}
+      if(data.today?.entries&&data.today.date===todayKey()){logEntries=data.today.entries;waterMl=Number(data.today.waterMl)||0;caloriesBurned=Number(data.today.burned)||0;persistLog();window.nutriStore.setItem('nutrilog_water_today',waterMl);window.nutriStore.setItem('nutrilog_burned_today',caloriesBurned);}
       if(data.recents)recentFoods=data.recents;
       recomputeTotals();renderLog();updateTotals();updateWaterUI();renderMemoryCount();updateWeightDisplay();renderWeightChart();refreshDataAdminSummary();
       g('goalsModal')?.classList.remove('open');showToast('Backup imported successfully ✓');
@@ -1669,7 +1669,7 @@ function refreshDataAdminSummary(){
   const customFoodCount=Object.keys(USER_DB||{}).length;
   const templateCount=Object.keys(mealTemplates||{}).length;
   const weightCount=Array.isArray(bodyWeight)?bodyWeight.length:0;
-  const bytes=storageKeys().filter(k=>k.startsWith('nutrilog_')||k==='nutriMemory').reduce((sum,k)=>sum+k.length+(localStorage.getItem(k)||'').length,0)*2;
+  const bytes=storageKeys().filter(k=>k.startsWith('nutrilog_')||k==='nutriMemory').reduce((sum,k)=>sum+k.length+(window.nutriStore.getItem(k)||'').length,0)*2;
   const fmt=bytes<1024?`${bytes} B`:bytes<1024*1024?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1024/1024).toFixed(2)} MB`;
   el.innerHTML=[
     ['Storage keys',keyCount],['Saved foods',savedFoodCount],['Custom foods',customFoodCount],
@@ -1680,7 +1680,7 @@ g('refreshDataAdminBtn')?.addEventListener('click',()=>{refreshDataAdminSummary(
 g('clearAllDataBtn')?.addEventListener('click',()=>{
   if(!confirm('Erase ALL NutriTrack data stored in this browser? This cannot be undone. Export a backup first if you need one.'))return;
   if(!confirm('Final confirmation: permanently delete your profile, goals, food logs, history, custom foods, templates and weight records?'))return;
-  storageKeys().filter(k=>k.startsWith('nutrilog_')||k==='nutriMemory').forEach(k=>localStorage.removeItem(k));
+  storageKeys().filter(k=>k.startsWith('nutrilog_')||k==='nutriMemory').forEach(k=>window.nutriStore.removeItem(k));
   location.reload();
 });
 refreshDataAdminSummary();
@@ -1743,7 +1743,7 @@ g('shortcutsModal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)
     }
     if (name !== 'more') closeMoreSheet();
     document.querySelectorAll('.mob-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-    localStorage.setItem('nutrilog_mobile_tab', name);
+    window.nutriStore.setItem('nutrilog_mobile_tab', name);
     (panels[name] || (() => {}))();
     // Update log badge
     updateMobLogBadge();
@@ -1751,7 +1751,7 @@ g('shortcutsModal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)
   window.activateTab = activateTab;
 
   // Restore last tab
-  const saved = localStorage.getItem('nutrilog_mobile_tab') || 'search';
+  const saved = window.nutriStore.getItem('nutrilog_mobile_tab') || 'search';
   if (isMobileUI()) activateTab(saved);
   else { document.querySelector('.left-col')?.classList.add('active'); document.querySelector('.right-col')?.classList.add('active'); }
 
@@ -1768,7 +1768,7 @@ g('shortcutsModal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)
         document.querySelector('.right-col')?.classList.add('active');
         closeMoreSheet();
       } else {
-        const tab = localStorage.getItem('nutrilog_mobile_tab') || 'search';
+        const tab = window.nutriStore.getItem('nutrilog_mobile_tab') || 'search';
         activateTab(tab === 'more' ? 'search' : tab);
       }
     });
@@ -1785,7 +1785,7 @@ function closeMoreSheet() {
   g('moreSheet')?.classList.remove('open');
   g('moreSheetOverlay')?.classList.remove('open');
   // Restore previous tab highlight
-  const saved = localStorage.getItem('nutrilog_mobile_tab') || 'search';
+  const saved = window.nutriStore.getItem('nutrilog_mobile_tab') || 'search';
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === saved && saved !== 'more'));
 }
 window.openMoreSheet = openMoreSheet;
@@ -1882,8 +1882,8 @@ document.addEventListener('click', (e) => {
 ══════════════════════════════════════════════════════ */
 function saveAllState(){
   _save('nutrilog_log_today',logEntries);
-  localStorage.setItem('nutrilog_water_today',waterMl);
-  localStorage.setItem('nutrilog_burned_today',caloriesBurned);
+  window.nutriStore.setItem('nutrilog_water_today',waterMl);
+  window.nutriStore.setItem('nutrilog_burned_today',caloriesBurned);
   _save('nutrilog_userfoods',USER_DB);
   _save('nutrilog_savedfoods',savedFoods);
   _save('nutrilog_goals',goals);
@@ -1894,9 +1894,9 @@ function saveAllState(){
   _save('nutrilog_meal_templates',mealTemplates);
   _save('nutrilog_bodyweight',bodyWeight);
   _save('nutrilog_profile',profile);
-  localStorage.setItem('nutrilog_curmeal',currentMeal);
-  localStorage.setItem('nutrilog_theme',theme);
-  localStorage.setItem('nutrilog_watergoal',waterGoal);
+  window.nutriStore.setItem('nutrilog_curmeal',currentMeal);
+  window.nutriStore.setItem('nutrilog_theme',theme);
+  window.nutriStore.setItem('nutrilog_watergoal',waterGoal);
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveAllState();});
 window.addEventListener('pagehide',saveAllState);
@@ -1985,9 +1985,9 @@ document.addEventListener('touchend', e => {
 ══════════════════════════════════════════════════════ */
 g('foodInput')?.addEventListener('focus', () => {
   // Show hint only first few times
-  const n = parseInt(localStorage.getItem('nutrilog_search_hints') || '0');
+  const n = parseInt(window.nutriStore.getItem('nutrilog_search_hints') || '0');
   if (n < 3) {
-    localStorage.setItem('nutrilog_search_hints', n + 1);
+    window.nutriStore.setItem('nutrilog_search_hints', n + 1);
     if (n === 0) showToast('Tip: ↑↓ to navigate, Enter to select');
   }
 });
