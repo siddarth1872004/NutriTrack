@@ -29,6 +29,14 @@ export default async function HomePage() {
         </p>
       </section>
 
+      <section className="card" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:20,margin:"22px 0",flexWrap:"wrap"}}>
+        <div>
+          <h2 style={{margin:"0 0 6px"}}>Prefer the original NutriTrack?</h2>
+          <p className="muted" style={{margin:0}}>Open the classic tracker with its original dashboard, food search, history, goals, templates and theme controls.</p>
+        </div>
+        <Link className="button" href="/legacy/index.html">Open classic tracker →</Link>
+      </section>
+
       <section className="view-grid" aria-label="Choose a NutriTrack view">
         <Link className="view-card" href="/signup">
           <span className="view-number">01 / PERSONAL</span>
