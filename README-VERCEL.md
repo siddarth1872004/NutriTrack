@@ -1,72 +1,75 @@
-# NutriTrack — Next.js + PostgreSQL deployment
+# NutriTrack — Next.js + Supabase + Vercel
 
-The Vercel migration lives in `src/app` and uses Next.js App Router, Node.js route handlers, PostgreSQL, bcrypt password hashes, and opaque HttpOnly session cookies. The original static files and local Python/SQLite app are retained while the tracker UI is migrated feature by feature.
+NutriTrack's new deployment foundation uses Next.js App Router on Vercel and **Supabase Postgres** as its hosted SQL database. The app connects to PostgreSQL with the `pg` driver using a server-only `DATABASE_URL`. Supabase Auth is not currently used: the included account routes use NutriTrack's own bcrypt password hashes and HttpOnly cookie sessions.
 
-## 1. Create a hosted PostgreSQL database
+The original static pages and local Python/SQLite app remain in the repository while the tracker UI is migrated feature by feature.
 
-Create a Neon PostgreSQL project (or another hosted PostgreSQL database supported by Vercel). Copy its connection string. Do not commit it.
+## 1. Create your Supabase database
 
-Set `DATABASE_URL` locally in your shell or in Vercel Project Settings → Environment Variables. For a Neon connection, use its pooled URL for the app if provided.
+1. Create a project at [Supabase](https://supabase.com/).
+2. Open **Project Settings → Database → Connection string**.
+3. Choose the connection method recommended for your runtime. For Vercel serverless functions, use Supabase's **Transaction pooler** connection string when available; use the session/direct connection for local migrations if your network supports it.
+4. Copy the full PostgreSQL URI. Keep it private and do not commit it.
 
-## 2. Apply schema and import every food
+Set `DATABASE_URL` locally and in Vercel's **Project Settings → Environment Variables**. Use the correct value for Development, Preview, and Production. Keep database credentials server-side; do not prefix them with `NEXT_PUBLIC_`.
 
-From the repository root, with Node.js 20+ installed:
+Example shape only (not a real credential):
 
-```sh
+```text
+postgresql://postgres.<project-ref>:<password>@<pooler-host>:6543/postgres
+```
+
+Use the exact URI and port shown in your Supabase dashboard. If the password contains URI-special characters, use the correctly URL-encoded password supplied by your provider.
+
+## 2. Create the SQL tables and import the food catalogue
+
+From the repository root with Node.js 20+:
+
+```powershell
 npm install
-# Set DATABASE_URL in your shell first.
+$env:DATABASE_URL = "YOUR_SUPABASE_POSTGRES_URI"
 npm run db:import-foods
 ```
 
-The import script applies `db/schema.sql`, loads the default export from `js/foods.js`, validates each required nutrition field, and upserts each entry into `foods` by its original object key (`source_key`). It preserves every original food object in `source_data` JSONB, including optional countable serving metadata. Running it again updates matching foods instead of duplicating them. The script wraps the import in a transaction and rolls back on validation or database errors.
+The importer first applies `db/schema.sql`, then imports the default `FOOD_DB` export from `js/foods.js`. It validates required nutrition fields, writes nutrition values to typed PostgreSQL columns, preserves each full original food object in JSONB (including optional countable-serving metadata), and upserts by the original JavaScript key (`source_key`). Re-running it updates matching records rather than duplicating them. Import is transactional and rolls back on validation or database errors.
 
-You can apply the schema without importing food data by running the SQL in `db/schema.sql` using your provider's SQL editor.
+Alternatively, paste and run `db/schema.sql` in the Supabase SQL Editor, then run the importer to load the foods. The SQL Editor alone creates the tables; it does not execute the JavaScript importer.
 
-## 3. Seed initial admin and dietitian accounts
+## 3. Create admin and dietitian accounts
 
-No shared/default password is embedded in the public repository. Set a unique password for each account in your local terminal, then run the one-time seeder:
-
-```sh
-export DATABASE_URL='your-postgres-connection-string'
-export INITIAL_ADMIN_USERNAME='admin'
-export INITIAL_ADMIN_PASSWORD='choose-a-unique-password-at-least-12-characters'
-export INITIAL_DIETITIAN_USERNAME='dietitian'
-export INITIAL_DIETITIAN_PASSWORD='choose-another-unique-password-at-least-12-characters'
-npm run db:seed-accounts
-unset INITIAL_ADMIN_PASSWORD INITIAL_DIETITIAN_PASSWORD
-```
-
-PowerShell equivalent:
+No shared passwords are hardcoded in this public repository. Set your own passwords in your local terminal and run the one-time seed script:
 
 ```powershell
-$env:DATABASE_URL = 'your-postgres-connection-string'
-$env:INITIAL_ADMIN_USERNAME = 'admin'
-$env:INITIAL_ADMIN_PASSWORD = 'choose-a-unique-password-at-least-12-characters'
-$env:INITIAL_DIETITIAN_USERNAME = 'dietitian'
-$env:INITIAL_DIETITIAN_PASSWORD = 'choose-another-unique-password-at-least-12-characters'
+$env:INITIAL_ADMIN_USERNAME = "admin"
+$env:INITIAL_ADMIN_PASSWORD = "YOUR_UNIQUE_ADMIN_PASSWORD"
+$env:INITIAL_DIETITIAN_USERNAME = "dietitian"
+$env:INITIAL_DIETITIAN_PASSWORD = "YOUR_UNIQUE_DIETITIAN_PASSWORD"
 npm run db:seed-accounts
 Remove-Item Env:INITIAL_ADMIN_PASSWORD, Env:INITIAL_DIETITIAN_PASSWORD
 ```
 
-The seeder hashes passwords with bcrypt and updates the supplied account passwords if the usernames already exist with the expected roles. It refuses to change a username assigned to a different role. Never place these passwords in Vercel environment variables for regular app runtime or in source control.
+Use unique passwords of at least 12 characters. The script uses bcrypt hashes, never prints passwords, and refuses to reassign an existing username to a different role. It updates passwords for matching existing accounts, so run it only when you intend to seed/reset those accounts. Do not configure the initial passwords as persistent Vercel runtime environment variables.
 
 ## 4. Deploy to Vercel
 
-1. Import this GitHub repository into Vercel.
-2. Set `DATABASE_URL` in Vercel's environment variables for Preview and Production.
-3. Use the default Next.js build command: `npm run build`.
-4. Deploy. The server-side health endpoint is `/api/health`; food search is `/api/foods?q=rice`.
-5. Run schema and food import once against the same hosted database that the deployment uses. Do not run the importer during each serverless request.
+1. Import this repository into [Vercel](https://vercel.com/).
+2. Add `DATABASE_URL` to Vercel Environment Variables for Preview and Production.
+3. Use Vercel's standard Next.js build command, `npm run build`.
+4. Deploy. Check `/api/health` and `/api/foods?q=rice` on the deployed domain.
+5. Ensure the schema and food import ran against the same Supabase project used by that deployment. Run the importer manually; do not run it for each serverless request.
 
-## API routes currently included
+## Current endpoints
 
-- `POST /api/auth/signup` — creates a normal user only.
+- `POST /api/auth/signup` — creates standard user accounts only.
 - `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`.
 - `GET /api/foods?q=rice&limit=30&offset=0`.
 - `GET /api/health`.
+- `POST /api/admin/users` and `POST /api/admin/assignments`.
+- `GET /api/dietitian/clients` and `POST /api/dietitian/recommendations`.
+- `GET/POST /api/my-data` and `GET /api/my-recommendations`.
 
-## Migration status — important
+## Migration status — read before retiring the old app
 
-This is the first deployable Next.js/PostgreSQL foundation, not a claim that every screen from the old tracker has already been ported. The SQL schema includes users, sessions, foods, dietitian assignments, nutrition snapshots and recommendations. The current Next.js UI includes sign-in, sign-up, a basic role-specific landing page and food catalogue browsing. The full meal logger, weight charts, existing browser LocalStorage migration, admin account management, client assignment controls and dietitian recommendation editor still need to be ported to the new API before the old local app can be retired.
+This is a Next.js/PostgreSQL foundation, **not yet a complete port of every original tracker feature**. The SQL schema includes users, sessions, foods, dietitian assignments, nutrition snapshots and recommendations. The new UI currently includes sign-in, sign-up, basic role landing pages, and food catalogue browsing. The full meal logger, weight charts, browser LocalStorage import, complete admin account-management UI, client-assignment UI and dietitian recommendation editor still need to be migrated.
 
-The old `server.py` and `.nutritrack/auth.sqlite3` are not used by the Next.js deployment. Existing local user accounts and personal tracker data are not automatically uploaded to the hosted database.
+The old `server.py` and `.nutritrack/auth.sqlite3` are not used by the Next.js deployment. Existing local user accounts and browser nutrition data are not automatically uploaded to Supabase. Keep backups until the data migration is implemented and verified.
