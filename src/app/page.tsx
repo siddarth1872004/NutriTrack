@@ -1,0 +1,8 @@
+import Link from "next/link";
+import { db } from "@/lib/db";
+export const dynamic="force-dynamic";
+export default async function HomePage(){
+ let foodCount="—",ready=false;
+ try{const r=await db.query("SELECT COUNT(*)::int AS count FROM foods");foodCount=Number(r.rows[0]?.count??0).toLocaleString();ready=true;}catch{}
+ return <main className="shell"><header className="topbar"><div className="brand">NutriTrack<span>.</span></div><span className="pill">Next.js · PostgreSQL</span></header><section className="hero"><div className="eyebrow">Nutrition, made personal</div><h1>Know what you eat.<br/>Own your progress.</h1><p className="lede">Track meals, calories, macros and weight in one place. NutriTrack is moving to a full-stack app with server-managed accounts and a shared food catalogue.</p><p><Link className="button" href="/login">Sign in</Link> <Link className="button secondary" href="/signup">Create account</Link></p></section><section className="grid"><article className="card"><h2>Food database</h2><p className="muted">Search nutrition values from PostgreSQL.</p><strong>{ready?foodCount+" foods imported":"Database not configured"}</strong><p><Link href="/foods">Browse food catalogue →</Link></p></article><article className="card"><h2>Role-based accounts</h2><p className="muted">Separate user, dietitian and administrator roles with server-side authorization.</p></article><article className="card"><h2>Vercel-ready foundation</h2><p className="muted">Next.js App Router, secure cookie sessions and hosted PostgreSQL.</p></article></section><p className="muted">To finish setup: configure DATABASE_URL, apply db/schema.sql, then run npm run db:import-foods.</p></main>;
+}
