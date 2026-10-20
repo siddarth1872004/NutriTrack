@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NutriTrack">
+  <meta name="theme-color" content="#f4f0e6">
+  <meta name="description" content="NutriTrack — a privacy-first, offline calorie, macro and weight tracker. All data stays in your browser.">
+  <meta property="og:title" content="NutriTrack">
+  <meta property="og:description" content="Privacy-first calorie, macro and weight tracker that runs entirely in your browser.">
+  <meta property="og:type" content="website">
+  <title>NutriTrack</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2.0.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css?v=2.6.0">
+</head>
+<body>
+<div id="splashScreen" class="splash-screen" aria-hidden="true">
+  <div class="splash-grid"></div>
+  <div class="splash-content">
+    <div class="splash-kicker">Daily Nutrition Facts</div>
+    <div class="splash-logo">NutriTrack</div>
+    <div class="splash-tag">Track clean / Eat smart / Move better</div>
+    <div class="splash-loader"><span></span></div>
+  </div>
+</div>
+<!-- HEADER -->
+<header class="app-header">
+  <div class="header-left">
+    <div class="brand">
+      <div class="logo">NutriTrack</div>
+      <div id="dateBadge" class="date-badge"></div>
+    </div>
+    <div id="streakBadge" class="streak-badge" style="display:none"></div>
+    <div id="savedPulse" class="saved-pulse" title="Auto-saved">✓</div>
+  </div>
+  <div class="header-right">
+    <div class="account-chip" aria-live="polite"><span class="account-dot" aria-hidden="true"></span><span id="accountName">Signed in</span><span id="accountRole" class="account-role"></span></div>
+    <a class="account-logout" href="/auth/logout" title="Sign out of NutriTrack">Sign out</a>
+    <button id="themeBtn"      class="icon-btn" title="Toggle theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"/><circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"/></svg></button>
+    <button id="shortcutsBtn"  class="icon-btn" title="Shortcuts (?)">⌨</button>
+    <button id="historyBtn"    class="icon-btn" title="History (H)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+    <button id="templatesBtn"  class="icon-btn" title="Meal Templates (T)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></button>
+    <button id="logWeightBtn"  class="icon-btn" title="Log body weight (W)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg></button>
+    <button id="goalsBtn"      class="icon-btn" title="Goals (G)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Goals</button>
+    <button id="memoryBtn"     class="memory-btn" title="NutriMemory (M)">
+       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" /></svg><span class="mem-label">Memory</span>
+      <span class="mem-badge" id="memoryCount">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="app-main">
+
+  <!-- ─── LEFT COL ─── -->
+  <section class="left-col">
+
+    <!-- Search -->
+    <div id="searchArea" class="search-card">
+      <div class="search-label-row">
+        <label class="section-label">Search Food</label>
+        <span class="search-tip"><kbd>/</kbd> focus · ↑↓ navigate · Enter select</span>
+      </div>
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <span class="search-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input id="foodInput" type="text"
+            placeholder="chicken breast, idli, 'dal', oats…"
+            autocomplete="off" spellcheck="false" aria-label="Search food">
+          <button id="clearSearchBtn" class="clear-input-btn" title="Clear">✕</button>
+        </div>
+        <button id="searchBtn" class="search-btn">Search</button>
+      </div>
+      <!-- Category filter pills -->
+      <div id="searchFilterPills" class="search-filter-pills"></div>
+      <div id="suggestions" class="suggestions" role="listbox"></div>
+    </div>
+
+    <!-- Portion Card -->
+    <div id="portionCard" class="portion-card">
+      <div class="card-food-header">
+        <div class="card-food-info">
+          <div id="cardFoodName" class="card-food-name"></div>
+          <div id="cardFoodBase" class="card-food-base"></div>
+          <div id="cardServingInfo" class="card-serving-info"></div>
+        </div>
+        <div class="card-food-badges">
+          <span id="cardCustomTag" class="custom-badge" style="display:none">custom</span>
+          <span id="portionMemoryBadge" class="portion-memory-badge" style="display:none"
+            title="Last used portion restored">
+            ⏱ last portion
+            <button id="clearPortionMemoryBtn" title="Clear memory">✕</button>
+          </span>
+        </div>
+      </div>
+
+      <div class="pending-bar-wrap">
+        <div id="pendingCalBar" class="pending-cal-bar"></div>
+      </div>
+
+      <div class="card-controls">
+        <div id="modeTabs" class="mode-tabs">
+          <button id="tabWeight" class="mode-tab active"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg>Weight</button>
+          <button id="tabCount"  class="mode-tab"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>Count</button>
+        </div>
+        <select id="mealSelector" class="meal-select"></select>
+      </div>
+
+      <!-- Weight panel -->
+      <div id="weightPanel" class="input-panel">
+        <input id="portionInput" type="number" min="0" step="any" placeholder="Amount">
+        <select id="unitSelector"></select>
+      </div>
+
+      <!-- Preset buttons -->
+      <div id="presetBtns" class="preset-btns">
+        <span class="preset-label">Quick</span>
+        <button data-preset="25">25g</button>
+        <button data-preset="50">50g</button>
+        <button data-preset="100">100g</button>
+        <button data-preset="150">150g</button>
+        <button data-preset="200">200g</button>
+        <button data-preset="300">300g</button>
+      </div>
+
+      <!-- Quick amount buttons -->
+      <div id="quickAmountBtns" class="quick-amount-btns"></div>
+
+      <!-- Count panel -->
+      <div id="countPanel" class="input-panel" style="display:none">
+        <input id="countInput" type="number" min="0" step="0.5" placeholder="Count">
+        <span id="countUnit" class="count-unit-label"></span>
+      </div>
+
+      <!-- Macro preview -->
+      <div class="macro-preview">
+        <div class="mp-cell mp-cal">  <div class="mp-val" id="mcal">0</div>  <div class="mp-lbl">kcal</div></div>
+        <div class="mp-cell mp-prot"> <div class="mp-val" id="mprot">0g</div> <div class="mp-lbl">protein</div></div>
+        <div class="mp-cell mp-carb"> <div class="mp-val" id="mcarb">0g</div> <div class="mp-lbl">carbs</div></div>
+        <div class="mp-cell mp-fat">  <div class="mp-val" id="mfat">0g</div>  <div class="mp-lbl">fat</div></div>
+      </div>
+
+      <!-- Nutrient detail -->
+      <div class="nutrient-detail">
+        <div class="nd-row">
+          <span class="nd-label" style="color:var(--prot)">Protein</span>
+          <span class="nd-kcal" id="detailCalProt"></span>
+          <span class="nd-pct"  id="detailProtPct"></span>
+          <span class="nd-goal">of daily goal</span>
+        </div>
+        <div class="nd-row">
+          <span class="nd-label" style="color:var(--carb)">Carbs</span>
+          <span class="nd-kcal" id="detailCalCarb"></span>
+          <span class="nd-pct"  id="detailCarbPct"></span>
+          <span class="nd-goal">of daily goal</span>
+        </div>
+        <div class="nd-row">
+          <span class="nd-label" style="color:var(--fat)">Fat</span>
+          <span class="nd-kcal" id="detailCalFat"></span>
+          <span class="nd-pct"  id="detailFatPct"></span>
+          <span class="nd-goal">of daily goal</span>
+        </div>
+      </div>
+
+      <div id="exceedWarn" class="exceed-warn" style="display:none"></div>
+
+      <div class="card-actions">
+        <button id="addLogBtn" class="add-btn">Log food <kbd class="btn-kbd">Ctrl ↵</kbd></button>
+        <button id="compareBtn"     class="icon-action-btn" title="Compare with another food"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 21L20 5M20 21H4V4"/></svg></button>
+        <button id="saveMemoryBtn"  class="icon-action-btn" title="Save to NutriMemory"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Water tracker -->
+    <div class="water-card">
+      <div class="water-header">
+        <span class="section-label"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>Water</span>
+        <div class="water-goal-wrap">
+          <span id="waterText" class="water-text">0L / 2.5L</span>
+          <button id="editWaterGoalBtn" class="water-goal-btn" title="Set water goal">Goal</button>
+        </div>
+      </div>
+      <div class="water-wave-wrap" id="waterWaveWrap">
+        <div class="water-wave-bg" id="waterWaveBg"></div>
+        <div class="water-wave" id="waterWave1">
+          <svg viewBox="0 0 400 30" preserveAspectRatio="none"><path d="M0,15 C50,5 100,25 150,15 C200,5 250,25 300,15 C350,5 400,25 400,15 L400,30 L0,30 Z"/></svg>
+        </div>
+        <div class="water-wave" id="waterWave2">
+          <svg viewBox="0 0 400 30" preserveAspectRatio="none"><path d="M0,20 C60,10 120,28 180,18 C240,8 300,26 360,16 C380,12 390,18 400,15 L400,30 L0,30 Z"/></svg>
+        </div>
+        <span class="water-pct-text" id="waterPctText"></span>
+      </div>
+      <div id="waterGlasses" class="water-glasses"></div>
+      <div class="water-btns">
+        <button id="waterAdd250">+250ml</button>
+        <button id="waterAdd500">+500ml</button>
+        <button id="waterAdd750">+750ml</button>
+        <button id="waterUndoBtn" data-action="water-undo" title="Undo last water change">↶ Undo</button>
+        <button id="waterResetBtn" data-action="water-reset" title="Reset today's water">Reset</button>
+        <button id="waterCustom" data-action="water-custom" class="water-btn-custom">+Custom</button>
+      </div>
+    </div>
+
+    <!-- Body weight widget -->
+    <div class="bodyweight-card">
+      <div class="bw-header">
+        <span class="section-label"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg>Body Weight</span>
+        <button id="logWeightBtn2" class="bw-log-btn" data-action="click-log-weight">Log</button>
+      </div>
+      <div class="bw-display">
+        <span id="weightDisplay" class="bw-val">—</span>
+        <span id="weightDiff" class="weight-diff"></span>
+      </div>
+      <canvas id="weightChart" width="280" height="70" class="weight-chart"></canvas>
+    </div>
+
+  </section>
+
+  <!-- ─── RIGHT COL ─── -->
+  <section class="right-col">
+
+    <!-- Totals -->
+    <div class="totals-card">
+      <!-- SVG gradient def (hidden) -->
+      <svg width="0" height="0">
+        <defs>
+          <linearGradient id="calGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#6c63ff"/>
+            <stop offset="100%" stop-color="#4ecdc4"/>
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div class="totals-header">
+        <div class="totals-header-left">
+          <h1 class="facts-title">Nutrition Facts</h1>
+          <span class="facts-sub">Today &middot; <span id="motivationMsg" class="motivation-msg"></span></span>
+        </div>
+        <div class="totals-header-right">
+          <!-- Exercise pill shows when calories burned > 0 -->
+          <div id="exercisePill" class="exercise-pill" style="display:none" title="Click × to remove exercise calories">
+            <span class="ep-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span>
+            <span class="ep-kcal" id="burnedPillText"></span>
+            <span class="ep-x" id="unlogBurnBtn" data-action="unlog-burn" title="Remove exercise log">✕</span>
+          </div>
+          <div class="burn-btns">
+            <button id="burnBtn"     class="burn-btn" title="Log exercise calories burned"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Exercise</button>
+            <button id="burnCalcBtn" class="burn-btn burn-calc-btn" title="Activity calculator"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Calc</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calorie ring + info -->
+      <div class="cal-ring-section">
+        <div class="cal-ring-wrap">
+          <svg viewBox="0 0 90 90" width="90" height="90">
+            <circle class="cal-ring-track" cx="45" cy="45" r="39"/>
+            <circle class="cal-ring-fill" id="calRingFill" cx="45" cy="45" r="39"/>
+          </svg>
+          <div class="cal-ring-label">
+            <div class="cal-ring-num" id="calRingNum">0</div>
+            <div class="cal-ring-sub">kcal</div>
+          </div>
+        </div>
+        <div class="cal-ring-info">
+          <div class="cri-row">
+            <span class="cri-label">Goal</span>
+            <span class="cri-val cri-goal" id="criGoal">2000 kcal</span>
+            <button id="editGoalsQuickBtn" class="cri-edit-btn" title="Edit calories/macros goals">Edit</button>
+          </div>
+          <div class="cri-row">
+            <span class="cri-label">Eaten</span>
+            <span class="cri-val cri-eaten" id="criEaten">0 kcal</span>
+          </div>
+          <div id="criBurnedRow" class="cri-row" style="display:none">
+            <span class="cri-label">Burned</span>
+            <span class="cri-val cri-burned" id="criBurned"></span>
+          </div>
+          <div class="cri-row">
+            <span class="cri-label" id="criRemLabel">Remaining</span>
+            <span class="cri-val cri-remaining" id="caloriesRemaining">2000 kcal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Macro mini bars -->
+      <div class="macro-mini-bars">
+        <div class="mmb-row">
+          <span class="mmb-label">Protein</span>
+          <div class="mmb-bar-wrap"><div id="mmbProt" class="mmb-bar mmb-prot" style="width:0%"></div></div>
+          <span class="mmb-vals"><span id="totalProt">0g</span> / <span id="goalProtLbl" class="cri-goal">150g</span></span>
+        </div>
+        <div class="mmb-row">
+          <span class="mmb-label">Carbs</span>
+          <div class="mmb-bar-wrap"><div id="mmbCarb" class="mmb-bar mmb-carb" style="width:0%"></div></div>
+          <span class="mmb-vals"><span id="totalCarb">0g</span> / <span id="goalCarbLbl" class="cri-goal">250g</span></span>
+        </div>
+        <div class="mmb-row">
+          <span class="mmb-label">Fat</span>
+          <div class="mmb-bar-wrap"><div id="mmbFat" class="mmb-bar mmb-fat" style="width:0%"></div></div>
+          <span class="mmb-vals"><span id="totalFat">0g</span> / <span id="goalFatLbl" class="cri-goal">65g</span></span>
+        </div>
+      </div>
+
+      <!-- Macro proportion -->
+      <div class="macro-prop-section">
+        <div class="macro-prop-label">
+          <span class="macro-prop-title">Energy split</span>
+          <div class="bar-legend">
+            <span class="bl-prot">Protein</span>
+            <span class="bl-carb">Carbs</span>
+            <span class="bl-fat">Fat</span>
+          </div>
+        </div>
+        <div class="macro-bar">
+          <div id="barProt" class="bar-seg bar-prot" style="width:0%"></div>
+          <div id="barCarb" class="bar-seg bar-carb" style="width:0%"></div>
+          <div id="barFat"  class="bar-seg bar-fat"  style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Hidden IDs needed by app.js for backward compat -->
+      <span id="totalCal"  style="display:none">0</span>
+      <span id="netCal"    style="display:none"></span>
+      <span id="goalPctCal"  style="display:none"></span>
+      <span id="goalPctProt" style="display:none"></span>
+      <span id="goalPctCarb" style="display:none"></span>
+      <span id="goalPctFat"  style="display:none"></span>
+      <span id="goalBarCal"  style="display:none"></span>
+      <span id="goalBarProt" style="display:none"></span>
+      <span id="goalBarCarb" style="display:none"></span>
+      <span id="goalBarFat"  style="display:none"></span>
+    </div>
+
+    <!-- Food Log -->
+    <div class="log-card">
+      <div class="log-header">
+        <span class="section-label">Food Log</span>
+        <div class="log-header-actions">
+          <div class="log-search-wrap">
+            <input id="logSearchInput" type="search" class="log-search" placeholder="Search food, notes…" aria-label="Search food log">
+            <button id="clearLogSearchBtn" class="log-search-clear" type="button" aria-label="Clear log search" title="Clear search">×</button>
+          </div>
+          <label class="log-filter-label"><span class="sr-only">Filter by meal</span>
+            <select id="logMealFilter" aria-label="Filter by meal" title="Filter by meal">
+              <option value="all">All meals</option>
+            </select>
+          </label>
+          <label class="log-filter-label"><span class="sr-only">Sort food log</span>
+            <select id="logSortOrder" aria-label="Sort food log" title="Sort entries">
+              <option value="default">Default order</option>
+              <option value="name">Name A–Z</option>
+              <option value="cal-desc">Calories: high to low</option>
+              <option value="cal-asc">Calories: low to high</option>
+              <option value="protein-desc">Protein: high to low</option>
+            </select>
+          </label>
+          <button id="copyLogBtn"     class="log-action-btn" title="Copy log to clipboard"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          <button id="saveTemplateBtn" class="log-action-btn" title="Save as meal template (T)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+          <button id="clearLogBtn"    class="clear-btn" title="Clear log"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        </div>
+      </div>
+      <div id="logEntries" class="log-entries"></div>
+    </div>
+
+  </section>
+</main>
+
+<!-- NUTRIMEMORY DRAWER -->
+<div id="memoryOverlay" class="drawer-overlay"></div>
+<aside id="memoryDrawer" class="memory-drawer">
+  <div class="drawer-header">
+    <h2 class="drawer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" /></svg>NutriMemory</h2>
+    <button id="closeMemory" class="drawer-close">✕</button>
+  </div>
+  <div class="drawer-search">
+    <input id="memorySearch" type="text" placeholder="Filter foods…" autocomplete="off">
+    <button class="add-custom-top-btn" data-action="open-add-custom">+ Custom Food</button>
+  </div>
+  <div id="memoryCats" class="cat-pills"></div>
+  <div id="memoryList" class="memory-list"></div>
+</aside>
+
+<!-- HISTORY DRAWER -->
+<div id="historyOverlay" class="drawer-overlay"></div>
+<aside id="historyDrawer" class="memory-drawer history-drawer">
+  <div class="drawer-header">
+    <h2 class="drawer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>History</h2>
+    <button id="closeHistory" class="drawer-close">✕</button>
+  </div>
+  <div id="calorieHeatmap" class="calorie-heatmap"></div>
+  <section id="analyticsReport" class="analytics-report" aria-labelledby="analyticsTitle">
+    <div class="analytics-heading">
+      <div><h3 id="analyticsTitle">Nutrition insights</h3><p>Trends and progress from your saved logs</p></div>
+      <label class="analytics-period-label" for="analyticsPeriod">Period
+        <select id="analyticsPeriod"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="all">All history</option></select>
+      </label>
+    </div>
+    <div id="analyticsSummary" class="analytics-summary"></div>
+    <div id="analyticsTrend" class="analytics-trend"></div>
+    <div class="analytics-actions"><button id="exportReportCsv" class="ie-btn" type="button">Export CSV</button><button id="printReportBtn" class="ie-btn" type="button">Print report</button></div>
+    <p class="analytics-footnote">Averages use days with logged food. Goal completion means logged calories were within 90–110% of your daily calorie goal. Estimates are for tracking, not medical advice.</p>
+  </section>
+  <div id="historyList" class="memory-list"></div>
+</aside>
+
+<!-- TEMPLATES DRAWER -->
+<div id="templatesOverlay" class="drawer-overlay"></div>
+<aside id="templatesDrawer" class="memory-drawer templates-drawer">
+  <div class="drawer-header">
+    <h2 class="drawer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>Meal Templates</h2>
+    <button id="closeTemplates" class="drawer-close">✕</button>
+  </div>
+  <div class="drawer-hint">Save today's log as a reusable template — load it on any day to pre-fill your log instantly.</div>
+  <div id="templatesPanel" class="templates-panel"></div>
+</aside>
+
+<!-- COMPARE DRAWER -->
+<div id="compareOverlay" class="drawer-overlay"></div>
+<aside id="compareDrawer" class="memory-drawer compare-drawer">
+  <div class="drawer-header">
+    <h2 class="drawer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 21L20 5M20 21H4V4"/></svg>Compare Foods</h2>
+    <button id="closeCompare" class="drawer-close">✕</button>
+  </div>
+  <div class="cmp-search-wrap">
+    <div class="cmp-selected">Comparing: <strong id="compareA"></strong></div>
+    <input id="compareSearch" type="text" placeholder="Search food to compare against…" autocomplete="off">
+    <div id="compareResults" class="cmp-results"></div>
+  </div>
+  <div id="compareTable" class="compare-table"></div>
+</aside>
+
+<!-- ADD CUSTOM FOOD -->
+<div id="addFoodModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Add Custom Food</h2>
+      <button id="closeAddFoodModal" class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-hint">Stored locally — searchable just like built-in foods.</p>
+      <div class="form-grid">
+        <div class="form-group full"><label>Food Name *</label>
+          <input id="afName" type="text" placeholder="e.g. Mum's Dal Tadka"></div>
+        <div class="form-group"><label>Category</label>
+          <input id="afCategory" type="text" placeholder="Custom" list="catList">
+          <datalist id="catList">
+            <option value="Custom"><option value="Grains"><option value="Vegetables">
+            <option value="Fruits"><option value="Meat"><option value="Seafood">
+            <option value="Eggs & Dairy"><option value="Legumes"><option value="Indian Curry">
+            <option value="Indian Dal"><option value="Indian Breakfast"><option value="Indian Sweets">
+            <option value="Fast Food"><option value="Beverages"><option value="Snacks">
+            <option value="Desserts"><option value="Nuts & Seeds">
+          </datalist></div>
+        <div class="form-group"><label>Unit</label>
+          <select id="afUnit"><option value="g">grams (g)</option><option value="ml">ml</option></select></div>
+        <div class="form-group"><label>Base Amount *</label>
+          <input id="afBase" type="number" min="1" step="any" value="100">
+          <span class="form-hint">Nutrition PER this amount</span></div>
+        <div class="form-group"><label>Calories *</label>
+          <input id="afCal" type="number" min="0" step="any" placeholder="e.g. 200"></div>
+        <div class="form-group"><label>Protein (g)</label>
+          <input id="afProt" type="number" min="0" step="any" placeholder="0"></div>
+        <div class="form-group"><label>Carbs (g)</label>
+          <input id="afCarb" type="number" min="0" step="any" placeholder="0"></div>
+        <div class="form-group"><label>Fat (g)</label>
+          <input id="afFat" type="number" min="0" step="any" placeholder="0"></div>
+        <div class="form-group"><label>Serving Size</label>
+          <input id="afServing" type="number" min="1" step="any" placeholder="100"></div>
+        <div class="form-group"><label>Serving Label</label>
+          <input id="afServingLabel" type="text" placeholder="e.g. 1 bowl"></div>
+      </div>
+      <div id="afCalPreview" class="cal-preview-hint"></div>
+      <label class="toggle-row">
+        <input id="afCountable" type="checkbox">
+        <span>Countable (pieces / eggs / slices…)</span>
+      </label>
+      <div id="afCountRow" class="form-grid" style="display:none;margin-top:12px">
+        <div class="form-group"><label>Unit Name</label>
+          <input id="afUnitName" type="text" placeholder="e.g. egg, piece"></div>
+        <div class="form-group"><label>Grams per piece</label>
+          <input id="afGramsEach" type="number" min="0.1" step="any" placeholder="e.g. 50"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" data-close-modal="addFoodModal">Cancel</button>
+      <button id="saveCustomFoodBtn" class="add-btn">Save Food</button>
+    </div>
+  </div>
+</div>
+
+<!-- GOALS MODAL -->
+<div id="goalsModal" class="modal-backdrop">
+  <div class="modal-box modal-box-wide">
+    <div class="modal-header">
+      <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Daily Goals</h2>
+      <button id="closeGoalsModal" class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tdee-section profile-section">
+        <div class="tdee-title"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>Your Profile & Daily Energy Needs</div>
+        <p class="profile-intro">These details power your calorie estimate. They stay in this browser on this device.</p>
+        <div class="form-grid tdee-grid">
+          <div class="form-group"><label for="tdeeAge">Age</label><input id="tdeeAge" type="number" min="13" max="100" step="1" placeholder="Age in years" autocomplete="off"></div>
+          <div class="form-group"><label for="tdeeGender">Equation</label>
+            <select id="tdeeGender"><option value="male">Male equation</option><option value="female">Female equation</option></select></div>
+          <div class="form-group"><label for="tdeeWeight">Current weight (kg)</label><input id="tdeeWeight" type="number" min="25" max="350" step="0.1" placeholder="e.g. 70" inputmode="decimal"></div>
+          <div class="form-group"><label for="tdeeHeight">Height (cm)</label><input id="tdeeHeight" type="number" min="100" max="250" step="0.1" placeholder="e.g. 170" inputmode="decimal"></div>
+          <div class="form-group full"><label for="tdeeActivity">Activity level</label>
+            <select id="tdeeActivity">
+              <option value="1.2">Sedentary — mostly sitting</option>
+              <option value="1.375">Lightly active — light exercise 1–3 days/week</option>
+              <option value="1.55">Moderately active — exercise 3–5 days/week</option>
+              <option value="1.725">Very active — exercise 6–7 days/week</option>
+              <option value="1.9">Extra active — demanding work and training</option>
+            </select></div>
+          <div class="form-group full"><label for="profileGoalMode">Your goal</label>
+            <select id="profileGoalMode">
+              <option value="maintain">Maintain weight — use estimated maintenance calories</option>
+              <option value="lose">Lose weight — modest 300 kcal/day reduction</option>
+              <option value="gain">Gain weight — modest 250 kcal/day increase</option>
+            </select>
+          </div>
+        </div>
+        <div class="tdee-footer profile-actions">
+          <button id="saveProfileBtn" class="cancel-btn" type="button">Save profile</button>
+          <button id="calcTDEEBtn" class="tdee-calc-btn" type="button">Calculate & Fill Goals</button>
+        </div>
+        <div id="tdeResult" class="tdee-result profile-result" role="status" aria-live="polite"></div>
+        <p class="profile-disclaimer">Estimates only, not medical advice. Your goal adjustment is a starting point; individual needs vary. Calculating fills the goal fields, but changes apply only when you select Save Goals.</p>
+      </div>
+      <div class="form-grid goals-grid">
+        <div class="form-group"><label>Calories (kcal)</label><input id="goalCalInput" type="number" placeholder="2000"></div>
+        <div class="form-group"><label>Protein (g)</label><input id="goalProtInput" type="number" placeholder="150"></div>
+        <div class="form-group"><label>Carbs (g)</label><input id="goalCarbInput" type="number" placeholder="250"></div>
+        <div class="form-group"><label>Fat (g)</label><input id="goalFatInput" type="number" placeholder="65"></div>
+        <div class="form-group full"><label>Water (ml)</label><input id="goalWaterInput" type="number" placeholder="2500"></div>
+      </div>
+      <div class="import-export-row">
+        <button id="exportBtn" class="ie-btn">⬇ Export Data</button>
+        <button id="importBtn" class="ie-btn">⬆ Import Data</button>
+        <input id="importFile" type="file" accept=".json" style="display:none">
+      </div>
+      <section class="data-admin" aria-labelledby="dataAdminTitle">
+        <div class="data-admin-heading">
+          <div>
+            <h3 id="dataAdminTitle">Local data administration</h3>
+            <p>Review what's saved in this browser and manage your local NutriTrack data.</p>
+          </div>
+          <span class="local-only-badge">This device only</span>
+        </div>
+        <div id="dataAdminSummary" class="data-admin-summary" aria-live="polite">Checking local data…</div>
+        <div class="data-admin-actions">
+          <button id="refreshDataAdminBtn" class="ie-btn" type="button">Refresh summary</button>
+          <button id="clearAllDataBtn" class="ie-btn danger-outline" type="button">Erase all NutriTrack data</button>
+        </div>
+        <p class="data-admin-warning">Erasing data permanently removes local food logs, history, profile, goals, custom foods, templates and weight records from this browser. Export a backup first if you may need it.</p>
+      </section>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" data-close-modal="goalsModal">Cancel</button>
+      <button id="saveGoalsBtn" class="add-btn">Save Goals</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div id="noteModal" class="modal-backdrop">
+  <div class="modal-box modal-box-sm">
+    <div class="modal-header"><h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Entry Note</h2>
+      <button class="modal-close" data-close-modal="noteModal">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Note</label>
+        <input id="noteInput" type="text" placeholder="homemade, restaurant, pre-workout…" maxlength="80">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="cancelNoteBtn" class="cancel-btn">Cancel</button>
+      <button id="saveNoteBtn" class="add-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BURN MODAL -->
+<div id="burnModal" class="modal-backdrop">
+  <div class="modal-box modal-box-sm">
+    <div class="modal-header"><h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Log Exercise</h2>
+      <button id="cancelBurnBtn" class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <p class="modal-hint">Burned calories subtract from your net calorie goal.</p>
+      <div class="form-group">
+        <label>Calories Burned</label>
+        <input id="burnInput" type="number" min="0" placeholder="e.g. 300">
+        <span class="form-hint">30min run ≈ 300 · 1hr gym ≈ 400 · 20min walk ≈ 100</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" data-close-modal="burnModal">Cancel</button>
+      <button id="saveBurnBtn" class="add-btn">Log</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVITY CALC MODAL -->
+<div id="burnCalcModal" class="modal-backdrop">
+  <div class="modal-box modal-box-sm">
+    <div class="modal-header"><h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Activity Calculator</h2>
+      <button id="closeBurnCalcModal" class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <p class="modal-hint">Estimate calories burned from exercise using MET values.</p>
+      <div class="form-grid">
+        <div class="form-group full"><label>Activity</label>
+          <select id="activitySelect"></select></div>
+        <div class="form-group"><label>Duration (mins)</label>
+          <input id="activityMins" type="number" min="1" value="30" placeholder="30"></div>
+        <div class="form-group"><label>Body Weight (kg)</label>
+          <input id="activityWeight" type="number" step="0.1" placeholder="70"></div>
+      </div>
+      <button id="calcActivityBtn" class="tdee-calc-btn" style="margin-top:12px">Calculate</button>
+      <div id="activityResult" class="activity-result" style="display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" data-close-modal="burnCalcModal">Close</button>
+      <button id="logActivityBurnBtn" class="add-btn">Log This Burn</button>
+    </div>
+  </div>
+</div>
+
+<!-- BODY WEIGHT MODAL -->
+<div id="weightModal" class="modal-backdrop">
+  <div class="modal-box modal-box-sm">
+    <div class="modal-header"><h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg>Log Body Weight</h2>
+      <button id="cancelWeightBtn" class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Weight (kg)</label>
+          <input id="weightInput" type="number" step="0.1" min="1" placeholder="70.5"></div>
+        <div class="form-group"><label>Date</label>
+          <input id="weightDate" type="date"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" data-close-modal="weightModal">Cancel</button>
+      <button id="saveWeightBtn" class="add-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHORTCUTS MODAL -->
+<div id="shortcutsModal" class="modal-backdrop">
+  <div class="modal-box modal-box-sm">
+    <div class="modal-header"><h2>⌨ Keyboard Shortcuts</h2>
+      <button id="closeShortcutsModal" class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <table class="shortcuts-table">
+        <tr><td><kbd>/</kbd> or <kbd>Ctrl+K</kbd></td><td>Focus search</td></tr>
+        <tr><td><kbd>Ctrl+Enter</kbd></td><td>Log selected food</td></tr>
+        <tr><td><kbd>Ctrl+Z</kbd></td><td>Undo</td></tr>
+        <tr><td><kbd>↑ ↓</kbd></td><td>Navigate suggestions</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>Select food / search</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Close / dismiss</td></tr>
+        <tr><td><kbd>H</kbd></td><td>History drawer</td></tr>
+        <tr><td><kbd>M</kbd></td><td>NutriMemory</td></tr>
+        <tr><td><kbd>G</kbd></td><td>Goals modal</td></tr>
+        <tr><td><kbd>T</kbd></td><td>Meal Templates</td></tr>
+        <tr><td><kbd>W</kbd></td><td>Log body weight</td></tr>
+        <tr><td><kbd>E</kbd></td><td>Activity calorie calculator</td></tr>
+        <tr><td><kbd>?</kbd></td><td>This shortcuts panel</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM TAB BAR -->
+<nav class="mobile-tabs" id="mobileTabBar">
+  <div class="mobile-tab-inner">
+    <button class="mob-tab active" data-tab="search">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <span>Search</span>
+    </button>
+    <button class="mob-tab" data-tab="log">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span>
+      <span>Log</span>
+      <span class="mob-badge" id="mobLogBadge" style="display:none"></span>
+    </button>
+    <button class="mob-tab" data-tab="stats">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+      <span>Stats</span>
+    </button>
+    <button class="mob-tab" data-tab="water">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
+      <span>Water</span>
+    </button>
+    <button class="mob-tab" data-tab="more">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></span>
+      <span>More</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MORE SHEET -->
+<div id="moreSheet" class="more-sheet">
+  <div class="more-sheet-handle"></div>
+  <div class="more-sheet-grid">
+    <button class="more-item" data-action="open-history">
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>History</span>
+    </button>
+    <button class="more-item" data-action="open-memory">
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" /></svg></span><span>Memory</span>
+    </button>
+    <button class="more-item" data-action="open-templates">
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span><span>Templates</span>
+    </button>
+    <button class="more-item" data-action="more-log-weight">
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M22 7l-5-2-5 2M10 7l-5-2-5 2M5 7v7a3 3 0 0 0 6 0V7M13 7v7a3 3 0 0 0 6 0V7"/></svg></span><span>Weight</span>
+    </button>
+    <button class="more-item" data-action="more-goals">
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><span>Goals</span>
+    </button>
+    <button class="more-item" data-action="more-burn-calc">
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span>Burn Calc</span>
+    </button>
+    <button class="more-item" data-action="more-shortcuts">
+      <span class="more-icon">⌨</span><span>Shortcuts</span>
+    </button>
+    <button class="more-item" data-action="more-theme">
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"/><circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"/></svg></span><span>Theme</span>
+    </button>
+  </div>
+</div>
+<div id="moreSheetOverlay" class="more-sheet-overlay" data-action="close-more-sheet"></div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+(async function () {
+  const showError = (title, message) => {
+    document.body.innerHTML = '<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1>' + title + '</h1><p>' + message + '</p><p><a href="/login">Sign in</a></p></main>';
+  };
+  let response;
+  try { response = await fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" }); }
+  catch (_) { showError("NutriTrack is unavailable", "Could not reach the NutriTrack server. Check your connection and reload."); return; }
+  if (response.status === 401) { location.replace("/login"); return; }
+  if (!response.ok) { showError("NutriTrack could not start", "The server could not verify your account. Please try again later."); return; }
+  let result;
+  try { result = await response.json(); } catch (_) { showError("Invalid server response", "Please reload or sign in again."); return; }
+  const user = result.user;
+  if (!user) { location.replace("/login"); return; }
+  if (user.role === "admin") { location.replace("/admin"); return; }
+  if (user.role === "dietitian") { location.replace("/dietitian"); return; }
+
+  const prefix = "nutritrack_account:" + user.username + ":";
+  const relevant = key => typeof key === "string" && (key.startsWith("nutrilog_") || key === "nutriMemory");
+  const store = window.localStorage;
+  const rawGet = Storage.prototype.getItem, rawSet = Storage.prototype.setItem, rawRemove = Storage.prototype.removeItem, rawKey = Storage.prototype.key;
+  const physicalKeys = () => { const keys=[]; for(let i=0;i<store.length;i++){const k=rawKey.call(store,i);if(k!==null)keys.push(k);}return keys; };
+  const accountKeys = () => physicalKeys().filter(k=>k.startsWith(prefix)).map(k=>k.slice(prefix.length));
+  const legacyKeys = physicalKeys().filter(relevant);
+  const hasAccountData = physicalKeys().some(k=>k.startsWith("nutritrack_account:"));
+  const responseData = await fetch("/api/my-data", {credentials:"same-origin",cache:"no-store"});
+  if (!responseData.ok) { showError("Could not load your data", "Your saved tracker data could not be loaded from your account. No local data was removed. Please reload or sign in again."); return; }
+  const saved = await responseData.json();
+  const snapshot = saved.snapshot && typeof saved.snapshot === "object" ? saved.snapshot : null;
+  if (snapshot) {
+    Object.entries(snapshot).forEach(([key,value]) => {
+      if (relevant(key) && typeof value === "string") rawSet.call(store,prefix+key,value);
+    });
+  } else if (!hasAccountData && legacyKeys.length) {
+    legacyKeys.forEach(key => rawSet.call(store,prefix+key,rawGet.call(store,key)));
+  }
+  legacyKeys.forEach(key=>rawRemove.call(store,key));
+  window.__nutritrackStoragePrefix=prefix;
+  window.__nutritrackStorageKeys=()=>accountKeys().filter(relevant);
+  Storage.prototype.getItem=function(key){const name=String(key);return rawGet.call(this,this===store&&relevant(name)?prefix+name:key);};
+  Storage.prototype.setItem=function(key,value){const name=String(key);return rawSet.call(this,this===store&&relevant(name)?prefix+name:key,value);};
+  Storage.prototype.removeItem=function(key){const name=String(key);return rawRemove.call(this,this===store&&relevant(name)?prefix+name:key);};
+
+  let syncing=false;
+  async function syncSnapshot(){
+    if(syncing)return; syncing=true;
+    try{
+      const payload={}; accountKeys().filter(relevant).forEach(key=>{payload[key]=rawGet.call(store,prefix+key);});
+      const r=await fetch("/api/my-data",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({payload})});
+      if(!r.ok) console.warn("Nutrition data sync failed:",r.status);
+    }catch(error){console.warn("Nutrition data sync deferred",error);}
+    finally{syncing=false;}
+  }
+  const name=document.getElementById("accountName"), role=document.getElementById("accountRole");
+  if(name)name.textContent=user.username;if(role)role.textContent=String(user.role).toUpperCase();
+  const logout=document.querySelector('a.account-logout'); if(logout){logout.href="/api/auth/logout";logout.addEventListener("click",async e=>{e.preventDefault();await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin"});location.href="/login";});}
+  await import("./js/app.js?v=2.6.0");
+  await syncSnapshot();
+  setInterval(syncSnapshot,5000);
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncSnapshot();});
+  window.addEventListener("pagehide",()=>{syncSnapshot();});
+  const header=document.querySelector(".header-right");
+  if(header&&!document.getElementById("recommendationsLink")){const link=document.createElement("a");link.id="recommendationsLink";link.href="/recommendations.html";link.className="account-logout";link.textContent="Dietitian notes";header.prepend(link);}
+})().catch(error=>{console.error(error);document.body.innerHTML='<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1>NutriTrack could not start</h1><p>Unexpected startup error. Please reload or sign in again.</p><p><a href="/login">Sign in</a></p></main>';});
+</script>
+</body>
+</html>
