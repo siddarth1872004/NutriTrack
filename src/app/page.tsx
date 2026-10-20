@@ -1,8 +1,64 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-export const dynamic="force-dynamic";
-export default async function HomePage(){
- let foodCount="—",ready=false;
- try{const r=await db.query("SELECT COUNT(*)::int AS count FROM foods");foodCount=Number(r.rows[0]?.count??0).toLocaleString();ready=true;}catch{}
- return <main className="shell"><header className="topbar"><div className="brand">NutriTrack<span>.</span></div><span className="pill">Next.js · PostgreSQL</span></header><section className="hero"><div className="eyebrow">Nutrition, made personal</div><h1>Know what you eat.<br/>Own your progress.</h1><p className="lede">Track meals, calories, macros and weight in one place. NutriTrack is moving to a full-stack app with server-managed accounts and a shared food catalogue.</p><p><Link className="button" href="/login">Sign in</Link> <Link className="button secondary" href="/signup">Create account</Link></p></section><section className="grid"><article className="card"><h2>Food database</h2><p className="muted">Search nutrition values from PostgreSQL.</p><strong>{ready?foodCount+" foods imported":"Database not configured"}</strong><p><Link href="/foods">Browse food catalogue →</Link></p></article><article className="card"><h2>Role-based accounts</h2><p className="muted">Separate user, dietitian and administrator roles with server-side authorization.</p></article><article className="card"><h2>Vercel-ready foundation</h2><p className="muted">Next.js App Router, secure cookie sessions and hosted PostgreSQL.</p></article></section><p className="muted">To finish setup: configure DATABASE_URL, apply db/schema.sql, then run npm run db:import-foods.</p></main>;
+
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  let foodCount = "—";
+  let ready = false;
+
+  try {
+    const result = await db.query("SELECT COUNT(*)::int AS count FROM foods");
+    foodCount = Number(result.rows[0]?.count ?? 0).toLocaleString();
+    ready = true;
+  } catch {}
+
+  return (
+    <main className="shell">
+      <header className="topbar">
+        <div className="brand">NutriTrack<span>.</span></div>
+        <span className="pill">Nutrition, made personal</span>
+      </header>
+
+      <section className="hero">
+        <div className="eyebrow">Your health, your way</div>
+        <h1>Know what you eat.<br />Own your progress.</h1>
+        <p className="lede">
+          Track meals, understand your nutrition, and make progress with a space
+          designed for you. Choose how you want to use NutriTrack.
+        </p>
+      </section>
+
+      <section className="view-grid" aria-label="Choose a NutriTrack view">
+        <Link className="view-card" href="/signup">
+          <span className="view-number">01 / PERSONAL</span>
+          <span className="view-icon" aria-hidden="true">↗</span>
+          <h2>User</h2>
+          <p>Log meals, follow your nutrition, and keep track of your progress.</p>
+          <span className="view-action">Get started <span aria-hidden="true">→</span></span>
+        </Link>
+
+        <Link className="view-card" href="/login">
+          <span className="view-number">02 / GUIDANCE</span>
+          <span className="view-icon" aria-hidden="true">✳</span>
+          <h2>Dietitian</h2>
+          <p>Work with assigned clients and provide personalised recommendations.</p>
+          <span className="view-action">Dietitian sign in <span aria-hidden="true">→</span></span>
+        </Link>
+
+        <Link className="view-card" href="/login">
+          <span className="view-number">03 / MANAGEMENT</span>
+          <span className="view-icon" aria-hidden="true">⌘</span>
+          <h2>Admin</h2>
+          <p>Manage accounts, assign dietitians, and oversee the platform.</p>
+          <span className="view-action">Admin sign in <span aria-hidden="true">→</span></span>
+        </Link>
+      </section>
+
+      <footer className="home-footer">
+        <span>{ready ? `${foodCount} foods in the nutrition catalogue` : "Nutrition tracking made simpler"}</span>
+        <Link href="/foods">Browse food catalogue <span aria-hidden="true">→</span></Link>
+      </footer>
+    </main>
+  );
 }
