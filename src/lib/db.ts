@@ -17,7 +17,9 @@ function getPool(): Pool {
     connectionString,
     max: process.env.NODE_ENV === "production" ? 5 : 10,
     idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 10000,
+    connectionTimeoutMillis: 8000,
+    query_timeout: 15000,
+    allowExitOnIdle: true,
     ssl: connectionString.includes("localhost") ? undefined : { rejectUnauthorized: false },
   });
 
