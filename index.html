@@ -741,22 +741,9 @@
 
 <script>
 (async function () {
-  async function publicDemo() {
-    const name = document.getElementById("accountName"), role = document.getElementById("accountRole");
-    if (name) name.textContent = "Public demo";
-    if (role) role.textContent = "NO LOGIN";
-    document.querySelectorAll('a[href="/auth/logout"]').forEach(link => link.hidden = true);
-    const banner = document.createElement("div");
-    banner.setAttribute("role", "status");
-    banner.style.cssText = "padding:10px 16px;background:#fff0d8;color:#67451b;text-align:center;font-size:13px";
-    banner.textContent = "Public demo mode: sign-in and separate accounts require the local launcher. Your data here is browser-only.";
-    document.body.prepend(banner);
-    await import("./js/app.js?v=2.6.0");
-  }
   let response;
   try { response = await fetch("/api/me", { credentials: "same-origin", cache: "no-store" }); }
-  catch (_) { await publicDemo(); return; }
-  if (response.status === 404) { await publicDemo(); return; }
+  catch (_) { document.body.innerHTML = '<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1>NutriTrack could not connect</h1><p>The authentication service could not be reached. Check the local server and try again. The tracker will not open in demo mode.</p><p><a href="/health">Check server health</a> · <a href="/login">Sign in again</a></p></main>'; return; }
   if (response.status === 401) { location.href = "/login"; return; }
   if (!response.ok) {
     document.body.innerHTML = '<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1>NutriTrack could not start</h1><p>The local server responded with HTTP ' + response.status + ' while checking your session.</p><p>Restart the local launcher and open the URL printed in its terminal. If this keeps happening, check the server terminal for the matching request error.</p><p><a href="/health">Check server health</a> · <a href="/login">Sign in again</a></p></main>';
