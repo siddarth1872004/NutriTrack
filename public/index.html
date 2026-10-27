@@ -775,7 +775,7 @@
   const name = document.getElementById("accountName"), role = document.getElementById("accountRole");
   if (name) name.textContent = user.username;
   if (role) role.textContent = user.role.toUpperCase();
-  if (user.role === "admin") { location.replace("/admin"); return; }
+  if (user.role === "admin") { location.replace("/admin.html"); return; }
   if (user.role === "dietitian") { location.replace("/dietitian.html"); return; }
 
   // Isolate each user's legacy tracker keys in this browser.
