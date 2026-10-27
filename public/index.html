@@ -741,68 +741,148 @@
 
 <script>
 (async function () {
-  const showError = (title, message) => {
-    document.body.innerHTML = '<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1>' + title + '</h1><p>' + message + '</p><p><a href="/login">Sign in</a></p></main>';
+  const showStartupError = (title, detail) => {
+    document.body.innerHTML = '<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1></h1><p></p><p><a href="/login">Sign in again</a></p></main>';
+    document.querySelector("main h1").textContent = title;
+    document.querySelector("main p").textContent = detail;
   };
-  let response;
-  try { response = await fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" }); }
-  catch (_) { showError("NutriTrack is unavailable", "Could not reach the NutriTrack server. Check your connection and reload."); return; }
-  if (response.status === 401) { location.replace("/login"); return; }
-  if (!response.ok) { showError("NutriTrack could not start", "The server could not verify your account. Please try again later."); return; }
-  const result = await response.json();
-  const user = result.user;
-  if (!user) { location.replace("/login"); return; }
-  if (user.role === "admin") { location.replace("/admin"); return; }
-  if (user.role === "dietitian") { location.replace("/dietitian"); return; }
 
-  let responseData;
-  try { responseData = await fetch("/api/my-data", {credentials:"same-origin",cache:"no-store"}); }
-  catch (_) { showError("Could not load your data", "NutriTrack could not reach the database. Your account data was not changed."); return; }
-  if (!responseData.ok) { showError("Could not load your data", "Your tracker could not load its account data from the database. Check the Vercel deployment and database connection, then reload."); return; }
-  const saved = await responseData.json();
-  const snapshot = saved.snapshot && typeof saved.snapshot === "object" ? saved.snapshot : {};
-  const relevant = key => typeof key === "string" && (key.startsWith("nutrilog_") || key === "nutriMemory");
-  const memory = new Map(Object.entries(snapshot).filter(([key,value]) => relevant(key) && typeof value === "string"));
-  let syncTimer = null, syncing = false, dirty = false;
-  const store = {
-    getItem(key) { const k=String(key); return memory.has(k) ? memory.get(k) : null; },
-    setItem(key,value) { memory.set(String(key),String(value)); dirty=true; scheduleSync(); },
-    removeItem(key) { if(memory.delete(String(key))) { dirty=true; scheduleSync(); } },
-    keys() { return Array.from(memory.keys()); }
-  };
-  window.nutriStore = store;
-  function scheduleSync() {
-    if(syncTimer) clearTimeout(syncTimer);
-    syncTimer=setTimeout(()=>{syncTimer=null;syncSnapshot();},350);
-    const pulse=document.getElementById("savedPulse");
-    if(pulse) pulse.classList.add("active");
+  let response;
+  try {
+    response = await fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" });
+  } catch (_) {
+    showStartupError("NutriTrack could not connect", "The authentication service could not be reached. Check your connection and try signing in again. Your tracker has not been opened in demo mode.");
+    return;
   }
+  if (response.status === 401) { location.replace("/login"); return; }
+  if (!response.ok) {
+    showStartupError("NutriTrack could not verify your session", "The authentication endpoint returned HTTP " + response.status + ". No demo or unauthenticated tracker has been opened.");
+    return;
+  }
+
+  let body;
+  try { body = await response.json(); }
+  catch (_) {
+    showStartupError("Invalid server response", "The authentication service did not return valid JSON. Please try again later.");
+    return;
+  }
+  const user = body && body.user;
+  if (!user || !user.username || !user.role) {
+    showStartupError("Invalid session response", "The server did not return a valid account. Please sign in again.");
+    return;
+  }
+
+  const name = document.getElementById("accountName"), role = document.getElementById("accountRole");
+  if (name) name.textContent = user.username;
+  if (role) role.textContent = user.role.toUpperCase();
+  if (user.role === "admin") { location.replace("/admin"); return; }
+  if (user.role === "dietitian") { location.replace("/dietitian.html"); return; }
+
+  // Isolate each user's legacy tracker keys in this browser.
+  const prefix = "nutritrack_account:" + user.username + ":";
+  const relevant = key => typeof key === "string" && (key.startsWith("nutrilog_") || key === "nutriMemory");
+  const storageObject = window.localStorage;
+  const rawGet = Storage.prototype.getItem;
+  const rawSet = Storage.prototype.setItem;
+  const rawRemove = Storage.prototype.removeItem;
+  const rawKey = Storage.prototype.key;
+  const physicalKeys = () => {
+    const keys = [];
+    for (let i = 0; i < storageObject.length; i++) {
+      const key = rawKey.call(storageObject, i);
+      if (key !== null) keys.push(key);
+    }
+    return keys;
+  };
+  const accountKeys = () => physicalKeys().filter(key => key.startsWith(prefix)).map(key => key.slice(prefix.length));
+  const legacyKeys = physicalKeys().filter(relevant);
+  const hasAccountData = physicalKeys().some(key => key.startsWith("nutritrack_account:"));
+
+  // Preserve existing browser data for the first signed-in account on this browser.
+  if (!hasAccountData && legacyKeys.length) {
+    legacyKeys.forEach(key => rawSet.call(storageObject, prefix + key, rawGet.call(storageObject, key)));
+  }
+  legacyKeys.forEach(key => rawRemove.call(storageObject, key));
+  window.__nutritrackStoragePrefix = prefix;
+  window.__nutritrackStorageKeys = () => accountKeys().filter(relevant);
+
+  Storage.prototype.getItem = function (key) {
+    const name = String(key);
+    return rawGet.call(this, this === storageObject && relevant(name) ? prefix + name : key);
+  };
+  Storage.prototype.setItem = function (key, value) {
+    const name = String(key);
+    return rawSet.call(this, this === storageObject && relevant(name) ? prefix + name : key, value);
+  };
+  Storage.prototype.removeItem = function (key) {
+    const name = String(key);
+    return rawRemove.call(this, this === storageObject && relevant(name) ? prefix + name : key);
+  };
+
   async function syncSnapshot() {
-    if(syncing || !dirty) return;
-    syncing=true; dirty=false;
+    if (user.role !== "user" || syncSnapshot.busy) return;
+    syncSnapshot.busy = true;
     try {
-      const payload=Object.fromEntries(memory.entries());
-      const r=await fetch("/api/my-data",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({payload})});
-      if(!r.ok) { dirty=true; console.error("Nutrition data sync failed:",r.status); }
-    } catch(error) { dirty=true; console.error("Nutrition data sync deferred",error); }
-    finally {
-      syncing=false;
-      const pulse=document.getElementById("savedPulse");
-      if(pulse) pulse.classList.toggle("active",dirty);
-      if(dirty && !syncTimer) syncTimer=setTimeout(()=>{syncTimer=null;syncSnapshot();},2000);
+      const snapshot = {};
+      accountKeys().filter(relevant).forEach(key => {
+        snapshot[key] = rawGet.call(storageObject, prefix + key);
+      });
+      const r = await fetch("/api/my-data", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payload: snapshot })
+      });
+      if (!r.ok) console.warn("Nutrition snapshot sync failed:", r.status);
+    } catch (error) { console.warn("Nutrition sync deferred", error); }
+    finally { syncSnapshot.busy = false; }
+  }
+
+  // Restore server data before initializing the tracker. Existing local keys win to avoid
+  // overwriting browser-only changes; missing keys are restored from the signed-in account.
+  try {
+    const r = await fetch("/api/my-data", { credentials: "same-origin", cache: "no-store" });
+    if (r.status === 401) { location.replace("/login"); return; }
+    if (!r.ok) throw new Error("Snapshot request failed with HTTP " + r.status);
+    const result = await r.json();
+    const snapshot = result && result.snapshot;
+    if (snapshot && typeof snapshot === "object" && !Array.isArray(snapshot)) {
+      for (const [key, value] of Object.entries(snapshot)) {
+        if (!relevant(key) || typeof value !== "string") continue;
+        if (rawGet.call(storageObject, prefix + key) === null) {
+          rawSet.call(storageObject, prefix + key, value);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn("Could not restore the saved nutrition snapshot:", error);
+  }
+
+  try {
+    await import("./js/app.js?v=2.6.0");
+  } catch (error) {
+    console.error(error);
+    showStartupError("NutriTrack could not start", "The tracker failed to load. Refresh the page or check the deployment logs.");
+    return;
+  }
+
+  if (user.role === "user") {
+    await syncSnapshot();
+    setInterval(syncSnapshot, 5000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") syncSnapshot();
+    });
+    window.addEventListener("pagehide", syncSnapshot);
+    const header = document.querySelector(".header-right");
+    if (header && !document.getElementById("recommendationsLink")) {
+      const link = document.createElement("a");
+      link.id = "recommendationsLink"; link.href = "/recommendations.html";
+      link.className = "account-logout"; link.textContent = "Dietitian notes"; header.prepend(link);
     }
   }
-  const name=document.getElementById("accountName"), role=document.getElementById("accountRole");
-  if(name)name.textContent=user.username;
-  if(role)role.textContent=String(user.role).toUpperCase();
-  const logout=document.querySelector('a.account-logout');
-  if(logout){logout.href="/api/auth/logout";logout.addEventListener("click",async e=>{e.preventDefault();try{await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin"});}finally{location.href="/login";}});}
-  await import("./js/app.js?v=2.7.0");
-  const header=document.querySelector(".header-right");
-  if(header&&!document.getElementById("recommendationsLink")){const link=document.createElement("a");link.id="recommendationsLink";link.href="/recommendations.html";link.className="account-logout";link.textContent="Dietitian notes";header.prepend(link);}
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncSnapshot();});
-  window.addEventListener("pagehide",()=>{if(dirty)syncSnapshot();});
-})().catch(error=>{console.error(error);document.body.innerHTML='<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1>NutriTrack could not start</h1><p>Unexpected startup error. Please reload or sign in again.</p><p><a href="/login">Sign in</a></p></main>';});
+})().catch(error => {
+  console.error(error);
+  document.body.innerHTML = '<main style="font:16px system-ui;max-width:720px;margin:12vh auto;padding:24px"><h1>NutriTrack could not start</h1><p>An unexpected startup error occurred. Please refresh or sign in again.</p><p><a href="/login">Sign in</a></p></main>';
+});
 </script>
 </body>
 </html>
