@@ -2,7 +2,7 @@
 
 NutriTrack's new deployment foundation uses Next.js App Router on Vercel and **Supabase Postgres** as its hosted SQL database. The app connects to PostgreSQL with the `pg` driver using a server-only `DATABASE_URL`. Supabase Auth is not currently used: the included account routes use NutriTrack's own bcrypt password hashes and HttpOnly cookie sessions.
 
-The original static pages and local Python/SQLite app remain in the repository while the tracker UI is migrated feature by feature.
+The original static pages and local Python/SQLite app remain in the repository for local compatibility. The deployed tracker requires a valid NutriTrack session; it never falls back to an unauthenticated demo.
 
 ## 1. Create your Supabase database
 
@@ -70,6 +70,6 @@ Use unique passwords of at least 12 characters. The script uses bcrypt hashes, n
 
 ## Migration status — read before retiring the old app
 
-This is a Next.js/PostgreSQL foundation, **not yet a complete port of every original tracker feature**. The SQL schema includes users, sessions, foods, dietitian assignments, nutrition snapshots and recommendations. The new UI currently includes sign-in, sign-up, basic role landing pages, and food catalogue browsing. The full meal logger, weight charts, browser LocalStorage import, complete admin account-management UI, client-assignment UI and dietitian recommendation editor still need to be migrated.
+This is a Next.js/PostgreSQL foundation, **not yet a complete port of every original tracker feature**. The SQL schema includes users, sessions, foods, dietitian assignments, nutrition snapshots and recommendations. The new UI currently includes sign-in, sign-up, basic role landing pages, and food catalogue browsing. The legacy meal logger and weight charts are still served from the static tracker and persist browser keys locally, with account-scoped PostgreSQL snapshot sync in the deployed app. The sync endpoint requires `{ payload: ... }` and the deployed tracker now uses the authenticated session API. Browser LocalStorage import into the database, and full native Next.js admin/client-assignment/recommendation interfaces, remain incomplete.
 
 The old `server.py` and `.nutritrack/auth.sqlite3` are not used by the Next.js deployment. Existing local user accounts and browser nutrition data are not automatically uploaded to Supabase. Keep backups until the data migration is implemented and verified.
