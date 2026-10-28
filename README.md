@@ -23,11 +23,28 @@ On Windows or macOS/Linux desktops, the launchers `Run-NutriTrack.bat` and `Run-
 
 Full database and deployment steps are in [DEPLOYMENT.md](DEPLOYMENT.md).
 
+## Features
+
+- **Home and onboarding:** a landing page that adapts to your role, and a sign-up flow that asks for your main goal.
+- **Daily tracker** (`/dashboard`): log foods by meal, watch calories and macros against your goals, track water and weight, review history, and import data from the older browser-only tracker. A checklist guides new users through their first steps.
+- **Food catalogue** (`/foods`): search and filter by category, with per-serving details.
+- **Recommendations** (`/recommendations`): notes from your dietitian plus balanced meal ideas.
+- **Dietitian workspace** (`/dietitian`): assigned clients, their progress, and recommendations.
+- **Administration** (`/admin`): accounts, roles, enable/disable, and dietitian assignments.
+
+## Testing
+
+```bash
+npm test                 # unit tests (no database needed)
+npm run smoke            # end-to-end checks against a running server; see DEPLOYMENT.md
+```
+
 ## Project layout
 
 - `src/app`: Next.js pages and API routes (auth, admin, dietitian, foods, tracker data).
 - `src/lib`: database connection, sessions and role checks.
-- `public/`: the tracker (`index.html`), admin and dietitian workspace screens, and recommendations.
+- `public/`: the legacy browser-first tracker (`index.html`) and the dietitian and admin workspace screens.
+- `src/components/`: the shared site header, which adapts to the signed-in role.
 - `db/schema.sql`: PostgreSQL schema.
 - `scripts/`: food importer and account seeding.
 - `js/foods.js`: the food catalogue imported into the database.

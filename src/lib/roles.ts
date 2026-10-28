@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { getCurrentUser, type Role } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
+import { homeFor, type Role } from "@/lib/paths";
+export { homeFor };
 
-// Where each role lands after signing in. "/dashboard" routes ordinary users to the tracker.
-export const homeFor = (role: Role) => (role === "admin" ? "/admin" : role === "dietitian" ? "/dietitian" : "/dashboard");
 
 // Serves a role-only HTML page from /public after checking the session on the server.
 // Visitors without a session go to /login; other roles are sent to their own workspace.

@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "db:import-foods": "node scripts/import-foods.mjs",
-    "db:seed-accounts": "node scripts/seed-accounts.mjs"
+    "db:seed-accounts": "node scripts/seed-accounts.mjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "smoke": "node scripts/smoke-test.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
