@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { isDemoName,jsonError,readJson,validUsername } from "@/lib/http";
+import { jsonError,readJson,validUsername } from "@/lib/http";
 export const runtime="nodejs";
 export async function POST(request:Request){
  const admin=await requireRole("admin");if(!admin)return jsonError("Administrator access required.",403);
  const b=await readJson(request);if(!b)return jsonError("Expected a JSON object.");
  if(!validUsername(b.username))return jsonError("A valid username is required.");
- if(isDemoName(admin.username)&&(!isDemoName(b.username)||(b.dietitian!==""&&!isDemoName(b.dietitian))))return jsonError("Demo admin can only manage demo_ accounts.",403);
  if(b.dietitian===""){await db.query("DELETE FROM dietitian_assignments WHERE user_id=(SELECT id FROM users WHERE username=$1)",[b.username]);return NextResponse.json({ok:true,message:`${b.username} is now unassigned.`});}
  if(!validUsername(b.dietitian))return jsonError("A valid dietitian is required.");
  const client=await db.query("SELECT id FROM users WHERE username=$1 AND role='user' AND active=TRUE",[b.username]);

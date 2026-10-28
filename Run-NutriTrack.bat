@@ -1,23 +1,14 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title NutriTrack Local
-where py >nul 2>nul
-if not errorlevel 1 goto use_py
-where python >nul 2>nul
-if not errorlevel 1 goto use_python
-echo Python 3.10 or newer is required.
-echo Install it from https://www.python.org/downloads/ and enable Add Python to PATH.
+where node >nul 2>nul || (echo Node.js 22 or newer is required: https://nodejs.org/ & pause & exit /b 1)
+if not exist .env.local (echo Create .env.local from .env.example and set DATABASE_URL first ^(see DEPLOYMENT.md^). & pause & exit /b 1)
+call npm install || goto fail
+call npm run build || goto fail
+call npm start
+goto end
+:fail
+echo NutriTrack could not start. Read the messages above.
 pause
-exit /b 1
-:use_py
-py -3 server.py
-goto done
-:use_python
-python server.py
-:done
-if errorlevel 1 (
-  echo NutriTrack stopped with an error. Read the message above.
-  pause
-)
+:end
 endlocal

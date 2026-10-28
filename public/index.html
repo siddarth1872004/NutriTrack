@@ -758,7 +758,7 @@
   let responseData;
   try { responseData = await fetch("/api/my-data", {credentials:"same-origin",cache:"no-store"}); }
   catch (_) { showError("Could not load your data", "NutriTrack could not reach the database. Your account data was not changed."); return; }
-  if (!responseData.ok) { showError("Could not load your data", "Your tracker could not load its account data from the database. Check the Vercel deployment and database connection, then reload."); return; }
+  if (!responseData.ok) { showError("Could not load your data", "Your tracker could not load its account data from the database. Check that the server is running and DATABASE_URL points to your Supabase databasetion, then reload."); return; }
   const saved = await responseData.json();
   const snapshot = saved.snapshot && typeof saved.snapshot === "object" ? saved.snapshot : {};
   const relevant = key => typeof key === "string" && (key.startsWith("nutrilog_") || key === "nutriMemory");

@@ -9,3 +9,7 @@ CREATE INDEX IF NOT EXISTS dietitian_assignments_dietitian_idx ON dietitian_assi
 CREATE TABLE IF NOT EXISTS nutrition_snapshots(user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,payload JSONB NOT NULL DEFAULT '{}'::jsonb,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 CREATE TABLE IF NOT EXISTS recommendations(id BIGSERIAL PRIMARY KEY,user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,dietitian_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,message TEXT NOT NULL CHECK(char_length(message) BETWEEN 1 AND 10000),created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 CREATE INDEX IF NOT EXISTS recommendations_user_created_idx ON recommendations(user_id,created_at DESC);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS primary_goal TEXT CHECK(primary_goal IN ('healthy_habits','manage_weight','energy','strength','balanced_meals'));
+CREATE TABLE IF NOT EXISTS login_attempts(id BIGSERIAL PRIMARY KEY,username TEXT NOT NULL,ip TEXT NOT NULL,attempted_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE INDEX IF NOT EXISTS login_attempts_user_idx ON login_attempts(username,attempted_at);
+CREATE INDEX IF NOT EXISTS login_attempts_ip_idx ON login_attempts(ip,attempted_at);

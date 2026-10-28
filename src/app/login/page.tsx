@@ -1,9 +1,53 @@
 "use client";
 import Link from "next/link";
-import { FormEvent,useEffect,useState } from "react";
-export default function LoginPage(){
- const [error,setError]=useState("");const [busy,setBusy]=useState(false);const [demo,setDemo]=useState(false);useEffect(()=>{fetch("/api/auth/demo").then(r=>r.json()).then(d=>setDemo(Boolean(d.enabled))).catch(()=>{});},[]);
- async function tryDemo(role:string){setBusy(true);setError("");try{const r=await fetch("/api/auth/demo",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({role})});const b=await r.json().catch(()=>({}));if(!r.ok){setError(b.error||"Demo unavailable.");setBusy(false);return;}window.location.replace(role==="admin"?"/admin":role==="dietitian"?"/dietitian":"/dashboard");}catch{setError("Could not reach the server.");setBusy(false);}}
- async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");const f=new FormData(e.currentTarget);try{const r=await fetch("/api/auth/login",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:f.get("username"),password:f.get("password")})});const b=await r.json().catch(()=>({}));if(!r.ok){setError(b.error||"Sign in failed.");setBusy(false);return;}window.location.replace(b.user.role==="admin"?"/admin":b.user.role==="dietitian"?"/dietitian":"/dashboard");}catch{setError("Could not reach the server. Try again.");setBusy(false);}}
- return <main className="shell"><header className="topbar"><Link className="brand" href="/">NutriTrack<span>.</span></Link></header><section className="card" style={{maxWidth:440,margin:"40px auto"}}><h1 style={{fontSize:42}}>Welcome back.</h1><p className="muted">Sign in to NutriTrack.</p>{error&&<p className="error">{error}</p>}<form onSubmit={submit}><label className="field">Username<input name="username" required minLength={3} maxLength={40} autoComplete="username"/></label><label className="field">Password<input name="password" type="password" required maxLength={256} autoComplete="current-password"/></label><button className="button" disabled={busy}>{busy?"Signing in…":"Sign in"}</button></form>{demo&&<div style={{marginTop:18}}><p className="muted">Showcase: try each view with a demo account</p><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{(["user","dietitian","admin"] as const).map(r=><button key={r} type="button" className="button secondary" disabled={busy} onClick={()=>tryDemo(r)}>Try as {r}</button>)}</div></div>}<p className="muted">New here? <Link href="/signup">Create an account</Link></p></section></main>;
+import { FormEvent, useState } from "react";
+import { homeFor } from "@/lib/paths";
+
+export default function LoginPage() {
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function post(body: unknown) {
+    setBusy(true);
+    setError("");
+    try {
+      const r = await fetch("/api/auth/login", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const b = await r.json().catch(() => ({}));
+      if (!r.ok) { setError(b.error || "Sign-in failed. Please try again."); setBusy(false); return; }
+      window.location.replace(homeFor(b.user.role));
+    } catch {
+      setError("Could not reach the server. Check your connection and try again.");
+      setBusy(false);
+    }
+  }
+
+  function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    post({ username: f.get("username"), password: f.get("password") });
+  }
+
+  return (
+    <main className="nt-wrap nt-page">
+      <div className="nt-card nt-auth">
+        <div className="nt-eyebrow">Welcome back</div>
+        <h1 className="nt-h2" style={{ fontSize: 36, letterSpacing: "-.05em" }}>Good to see you.</h1>
+        <p className="nt-muted">Sign in to pick up where you left off.</p>
+        {error && <div className="nt-notice err" role="alert">{error}</div>}
+        <form onSubmit={submit}>
+          <label className="nt-field">Username
+            <input name="username" required minLength={3} maxLength={40} autoComplete="username" placeholder="your-username" />
+          </label>
+          <label className="nt-field">Password
+            <input name="password" type="password" required maxLength={256} autoComplete="current-password" placeholder="Enter your password" />
+          </label>
+          <button className="nt-btn orange block" disabled={busy}>{busy ? "Signing in…" : "Sign in →"}</button>
+        </form>
+        <div className="nt-section" style={{ margin: "22px 0 0", borderTop: "1px solid var(--line)", paddingTop: 18 }}>
+          <span className="nt-small">New to NutriTrack?</span>
+          <Link className="nt-small" style={{ color: "var(--orange-dark)", fontWeight: 800 }} href="/signup">Create an account</Link>
+        </div>
+      </div>
+    </main>
+  );
 }

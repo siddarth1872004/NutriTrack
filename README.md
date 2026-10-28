@@ -1,29 +1,58 @@
 # NutriTrack
 
-NutriTrack is a nutrition and weight-tracking application migrating from static HTML/JavaScript and a local Python/SQLite setup to **Next.js App Router on Vercel with Supabase PostgreSQL**.
+NutriTrack is a nutrition and weight tracker with three roles, each with its own workspace:
+
+- **User**: tracks meals, water and weight, and reads dietitian recommendations.
+- **Dietitian**: views assigned clients and writes recommendations.
+- **Admin**: manages accounts, roles and dietitian assignments.
+
+It runs as a Next.js application backed by **Supabase PostgreSQL**. It does not depend on Vercel and runs on any host with Node.js 22+.
 
 ## Quick start
 
-1. Create a Supabase project and copy its PostgreSQL connection URI.
-2. Set `DATABASE_URL` in your local shell (server-side only).
-3. Run `npm install`.
-4. Run `npm run db:import-foods`. It applies `db/schema.sql` and imports the complete `js/foods.js` catalogue.
-5. Seed your admin and dietitian accounts with `npm run db:seed-accounts`, following [README-VERCEL.md](README-VERCEL.md).
-6. Run `npm run dev` locally, or deploy the repository through Vercel with `DATABASE_URL` configured.
+```bash
+cp .env.example .env.local     # then set DATABASE_URL to your Supabase URI
+npm install
+npm run db:import-foods        # creates the tables and loads the food catalogue
+npm run db:seed-accounts       # one-time: see DEPLOYMENT.md for the environment variables
+npm run build
+npm start                      # http://localhost:3000
+```
 
-## Food importer
+On Windows or macOS/Linux desktops, the launchers `Run-NutriTrack.bat` and `Run-NutriTrack.command` perform the install, build and start steps for you, provided `.env.local` exists.
 
-`scripts/import-foods.mjs` imports the default `FOOD_DB` export from `js/foods.js`. It validates required fields, stores nutrition values in typed SQL columns, preserves the full source record in JSONB, and uses the original JS key as a unique upsert key. Re-running it won't duplicate matching foods.
+Full database and deployment steps are in [DEPLOYMENT.md](DEPLOYMENT.md).
 
-## Migration status
+## Features
 
-The new foundation includes PostgreSQL schema, bcrypt password hashing, HttpOnly session cookies, authentication routes, food search, basic role landing pages, and API endpoints for admin, dietitian, recommendations, and user snapshots.
+- **Home and onboarding:** a landing page that adapts to your role, and a sign-up flow that asks for your main goal.
+- **Daily tracker** (`/dashboard`): log foods by meal, watch calories and macros against your goals, track water and weight, review history, and import data from the older browser-only tracker. A checklist guides new users through their first steps.
+- **Food catalogue** (`/foods`): search and filter by category, with per-serving details.
+- **Recommendations** (`/recommendations`): notes from your dietitian plus balanced meal ideas.
+- **Dietitian workspace** (`/dietitian`): assigned clients, each client's latest day, calories trend and weight, and recommendations.
+- **Administration** (`/admin`): create accounts, change roles, enable or disable and delete accounts, reset passwords, and assign dietitians.
+- **Account settings** (`/account`): change your own password.
 
-**Not every old tracker feature has been migrated yet.** Meal logging, weight charts, LocalStorage import, and complete admin/dietitian interfaces still need to be ported. Existing local SQLite accounts and browser data are not automatically uploaded. Keep the old local app and backups until the migration is complete.
+## Testing
+
+```bash
+npm test                 # unit tests (Node 22.6+, no database needed)
+npm run smoke            # end-to-end checks against a running server; see DEPLOYMENT.md
+```
+
+## Project layout
+
+- `src/app`: Next.js pages and API routes (auth, admin, dietitian, foods, tracker data).
+- `src/lib`: database connection, sessions and role checks.
+- `public/`: static assets, including the legacy browser-first tracker (`index.html`) used by the tracker's data sync.
+- `src/components/`: the shared site header, which adapts to the signed-in role.
+- `db/schema.sql`: PostgreSQL schema.
+- `scripts/`: food importer and account seeding.
+- `js/foods.js`: the food catalogue imported into the database.
+- `tests/unit/`: unit tests.
 
 ## Security
 
-- Never commit Supabase connection strings or passwords.
-- Keep `DATABASE_URL` server-side; never name it `NEXT_PUBLIC_DATABASE_URL`.
-- Use unique strong passwords for admin and dietitian accounts.
+- Keep `DATABASE_URL` and all passwords out of git. `.env.local` is ignored.
+- Use unique passwords of at least 12 characters for admin and dietitian accounts.
 - Public sign-up creates standard user accounts only.
