@@ -1,21 +1,17 @@
 "use client";
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { homeFor } from "@/lib/paths";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [demo, setDemo] = useState(false);
-  useEffect(() => {
-    fetch("/api/auth/demo").then((r) => r.json()).then((d) => setDemo(Boolean(d.enabled))).catch(() => {});
-  }, []);
 
-  async function post(body: unknown, url = "/api/auth/login") {
+  async function post(body: unknown) {
     setBusy(true);
     setError("");
     try {
-      const r = await fetch(url, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const r = await fetch("/api/auth/login", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const b = await r.json().catch(() => ({}));
       if (!r.ok) { setError(b.error || "Sign-in failed. Please try again."); setBusy(false); return; }
       window.location.replace(homeFor(b.user.role));
@@ -47,16 +43,6 @@ export default function LoginPage() {
           </label>
           <button className="nt-btn orange block" disabled={busy}>{busy ? "Signing in…" : "Sign in →"}</button>
         </form>
-        {demo && (
-          <div style={{ marginTop: 20 }}>
-            <p className="nt-small">Showcase: try each view with a demo account</p>
-            <div className="nt-actions" style={{ margin: "8px 0 0" }}>
-              {(["user", "dietitian", "admin"] as const).map((r) => (
-                <button key={r} type="button" className="nt-btn soft" disabled={busy} onClick={() => post({ role: r }, "/api/auth/demo")}>Try as {r}</button>
-              ))}
-            </div>
-          </div>
-        )}
         <div className="nt-section" style={{ margin: "22px 0 0", borderTop: "1px solid var(--line)", paddingTop: 18 }}>
           <span className="nt-small">New to NutriTrack?</span>
           <Link className="nt-small" style={{ color: "var(--orange-dark)", fontWeight: 800 }} href="/signup">Create an account</Link>

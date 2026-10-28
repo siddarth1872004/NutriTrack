@@ -9,3 +9,5 @@ export async function createSession(userId:string){const token=randomBytes(32).t
 export async function destroySession(){const jar=await cookies(),token=jar.get(COOKIE)?.value;if(token)await db.query("DELETE FROM sessions WHERE token_hash=$1",[hash(token)]);jar.set(COOKIE,"",{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:0});}
 export async function getCurrentUser():Promise<CurrentUser|null>{const token=(await cookies()).get(COOKIE)?.value;if(!token)return null;const r=await db.query("SELECT u.id::text,u.username,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>NOW() AND u.active=TRUE LIMIT 1",[hash(token)]);return r.rows[0]??null;}
 export async function requireRole(...roles:Role[]){const u=await getCurrentUser();return u&&roles.includes(u.role)?u:null;}
+
+export async function destroySessionsFor(userId:string){await db.query("DELETE FROM sessions WHERE user_id=$1",[userId]);}

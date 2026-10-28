@@ -1,13 +1,13 @@
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { isDemoName,jsonError,readJson,validUsername } from "@/lib/http";
+import { jsonError,readJson,validUsername } from "@/lib/http";
 export const runtime="nodejs";
 export async function POST(request:Request,{params}:{params:Promise<{username:string;action:string}>}){
  const admin=await requireRole("admin");if(!admin)return jsonError("Administrator access required.",403);
  const {username,action}=await params;
  if(!validUsername(username))return jsonError("Invalid username.");
- if(isDemoName(admin.username)&&!isDemoName(username))return jsonError("Demo admin can only manage demo_ accounts.",403);
  if(username===admin.username)return jsonError("You cannot change your own account here.",400);
  const found=await db.query("SELECT id,role,active FROM users WHERE username=$1",[username]);
  const target=found.rows[0];if(!target)return jsonError("Account not found.",404);
@@ -26,6 +26,11 @@ export async function POST(request:Request,{params}:{params:Promise<{username:st
  }else if(action==="delete"){
   if(removesAdmin&&!await otherAdmins())return jsonError("The last active administrator cannot be deleted.",409);
   await db.query("DELETE FROM users WHERE id=$1",[target.id]);
+ }else if(action==="password"){
+  const body=await readJson(request);const password=body?.password;
+  if(typeof password!=="string"||password.length<12||password.length>256)return jsonError("Password must be 12–256 characters.");
+  await db.query("UPDATE users SET password_hash=$2,updated_at=NOW() WHERE id=$1",[target.id,await bcrypt.hash(password,12)]);
+  await db.query("DELETE FROM sessions WHERE user_id=$1",[target.id]);
  }else return jsonError("Unknown action.",404);
  return NextResponse.json({ok:true});
 }

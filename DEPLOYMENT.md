@@ -50,7 +50,7 @@ For development with hot reload, use `npm run dev`. Check the setup at `/api/hea
 
 ## 5. Put it on the internet (optional)
 
-Any Node 20+ host works: a VPS, Railway, Render, Fly.io, or a container. Set `DATABASE_URL` as an environment variable on that host, run `npm run build && npm start`, and put it behind HTTPS. Session cookies are marked `Secure` in production, so HTTPS is required there.
+Any Node 22+ host works: a VPS, Railway, Render, Fly.io, or a container. Set `DATABASE_URL` as an environment variable on that host, run `npm run build && npm start`, and put it behind HTTPS. Session cookies are marked `Secure` in production, so HTTPS is required there.
 
 Because the browser and server share one origin, no CORS setup is needed.
 
@@ -58,7 +58,7 @@ Because the browser and server share one origin, no CORS setup is needed.
 
 | Role | Signs in to | Can |
 | --- | --- | --- |
-| User | `/dashboard` (daily tracker) | Track meals, weight and water; view recommendations |
+| User | `/dashboard` (daily tracker) | Track meals, weight and water; view recommendations; change own password |
 | Dietitian | `/dietitian` | View assigned clients and write recommendations |
 | Admin | `/admin` | Create users, change roles, enable/disable/delete accounts, assign dietitians |
 
@@ -69,14 +69,13 @@ Each workspace page is checked on the server, and every API route enforces its r
 - [ ] `DATABASE_URL` points at the Supabase project you intend to use (Transaction pooler on port 6543 for a hosted server).
 - [ ] `npm run db:import-foods` has been run against that project, and `/api/health` reports `"database":"ok"`.
 - [ ] Admin and dietitian accounts were created with strong, unique passwords, and the seed variables were not saved in any file.
-- [ ] `DEMO_MODE` is `false` (or unset). Demo accounts must not be exposed on a public site.
 - [ ] The site is served over HTTPS. Session cookies are `Secure` in production, and HSTS is sent.
-- [ ] `npm test` passes, and `npm run smoke` passes against the deployed URL (see below).
+- [ ] `npm test` passes (Node 22.6+), and `npm run smoke` passes against the deployed URL (see below).
 - [ ] Backups of the Supabase project are enabled in the Supabase dashboard.
 
 ## Smoke test
 
-After deploying, run the end-to-end checks. They create one throwaway `smoke_*` account and verify role boundaries and login throttling:
+After deploying, run the end-to-end checks. They create one throwaway `smoke_*` account and verify role boundaries, password change and reset, and login throttling. Use a non-production database for this, or delete the `smoke_*` accounts afterwards:
 
 ```bash
 BASE_URL=https://your-site.example ADMIN_USERNAME=admin ADMIN_PASSWORD='...' \
@@ -85,10 +84,12 @@ DIETITIAN_USERNAME=dietitian DIETITIAN_PASSWORD='...' npm run smoke
 
 ## Login protection
 
-Sign-in attempts are recorded in the `login_attempts` table. An account is locked for 15 minutes after 10 failed attempts, and an IP address after 40 failures in the same window. The IP is read from `x-forwarded-for`, so configure your proxy to set that header from the real client address, and do not expose the app without one.
+Sign-in attempts are recorded in the `login_attempts` table. An account is locked for 15 minutes after 10 failed attempts, and an IP address after 200 failures in the same window (generous, since many people can share one address). The IP is read from `x-forwarded-for`, so configure your proxy to set that header from the real client address, and do not expose the app without one.
 
 ## Migration status
 
-The Next.js app covers sign-in and sign-up (with a starting goal), the daily tracker with server sync and legacy-data import, the food catalogue with categories, the user recommendations page, and the admin and dietitian workspaces. The dietitian and admin workspaces still use the original static pages in `public/`, which work but are not yet restyled to the new design.
+Everything is served by the Next.js app: sign-in and sign-up (with a starting goal), the daily tracker with server sync and legacy-data import, the food catalogue, recommendations, the dietitian workspace (client summaries and recommendations), the administration console (accounts, roles, assignments, password resets), and account settings for changing a password.
+
+Forgotten passwords are handled by an administrator, who sets a new password from the console. Self-service email reset needs an email provider, which this project does not include.
 
 The original local SQLite data (`.nutritrack/auth.sqlite3`) and browser LocalStorage data are not uploaded automatically. Keep backups of them until you have verified your data in Supabase.

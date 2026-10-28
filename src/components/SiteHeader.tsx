@@ -13,6 +13,7 @@ export default function SiteHeader({ user }: { user: HeaderUser }) {
   if (user?.role === "user") items.push({ href: "/dashboard", label: "My tracker" }, { href: "/recommendations", label: "Recommendations" });
   if (user?.role === "dietitian") items.push({ href: "/dietitian", label: "Client workspace" });
   if (user?.role === "admin") items.push({ href: "/admin", label: "Administration" });
+  if (user) items.push({ href: "/account", label: "Account" });
 
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => {});

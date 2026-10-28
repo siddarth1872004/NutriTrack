@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
-import { homeFor } from "@/lib/roles";
+import { homeFor } from "@/lib/paths";
 
 export const dynamic = "force-dynamic";
 

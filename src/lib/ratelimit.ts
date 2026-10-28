@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 // Database-backed login throttling so limits hold across server instances and restarts.
 const WINDOW_MINUTES = 15;
 const MAX_FAILURES_PER_USER = 10;
-const MAX_FAILURES_PER_IP = 40;
+const MAX_FAILURES_PER_IP = 200; // generous: many people can share one NAT address
 
 export function clientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();

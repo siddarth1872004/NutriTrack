@@ -63,12 +63,41 @@ check("user can read the catalogue", (await userJar.fetch("/api/foods?q=rice&lim
 check("user cannot read admin overview", (await userJar.fetch("/api/admin/overview")).status === 403);
 
 const bad = jar();
+const ghost = "ghost_" + Math.random().toString(36).slice(2, 8);
 let blocked = false;
 for (let i = 0; i < 12 && !blocked; i++) {
-  const r = await bad.fetch("/api/auth/login", json({ username: name, password: "wrong-password-here" }));
+  const r = await bad.fetch("/api/auth/login", json({ username: ghost, password: "wrong-password-here" }));
   blocked = r.status === 429;
 }
 check("repeated failed logins are throttled", blocked);
+
+const changed = await userJar.fetch("/api/account/password", json({ current: "Smoke-test-pass-1", next: "Smoke-test-pass-2" }));
+check("user can change their own password", changed.status === 200);
+const relogin = await jar().fetch("/api/auth/login", json({ username: name, password: "Smoke-test-pass-2" }));
+check("new password works after change", relogin.status === 200);
+const reset = await adminJar.fetch("/api/admin/users/" + name + "/password", json({ password: "Smoke-reset-pass-3" }));
+check("admin can reset a user's password", reset.status === 200);
+check("reset signs the user out everywhere", (await userJar.fetch("/api/auth/me")).status === 401);
+check("user can sign in with the reset password", (await jar().fetch("/api/auth/login", json({ username: name, password: "Smoke-reset-pass-3" }))).status === 200);
+
+const newDiet = "diet_" + Math.random().toString(36).slice(2, 7);
+const made = await adminJar.fetch("/api/admin/users", json({ username: newDiet, password: "Diet-created-pass-1", role: "dietitian" }));
+check("admin can create a dietitian account", made.status === 201);
+check("the new dietitian can sign in", (await jar().fetch("/api/auth/login", json({ username: newDiet, password: "Diet-created-pass-1" }))).status === 200);
+check("a user cannot create accounts", (await userJar.fetch("/api/admin/users", json({ username: "nope_user1", password: "Nope-pass-123456", role: "user" }))).status === 403);
+
+const foodBody = { name: "Smoke test bagel", category: "Bread", serving_label: "1 bagel", serving_size: 100, base: 100, calories: 250, protein: 10, carbs: 49, fat: 1 };
+const addFood = await adminJar.fetch("/api/admin/foods", json(foodBody));
+const added = addFood.status === 201 ? (await addFood.json()).food : null;
+check("admin can add a food", Boolean(added));
+if (added) {
+  const edit = await adminJar.fetch("/api/admin/foods/" + added.id, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...foodBody, calories: 260 }) });
+  check("admin can edit a food", edit.status === 200 && Number((await edit.json()).food.calories) === 260);
+  check("the catalogue search finds it", (await userJar.fetch("/api/foods?q=Smoke%20test%20bagel")).status === 200 && (await (await userJar.fetch("/api/foods?q=Smoke%20test%20bagel")).json()).foods.some((f) => f.id === added.id));
+  check("a user cannot change the food database", (await userJar.fetch("/api/admin/foods/" + added.id, { method: "DELETE" })).status === 403);
+  check("admin can remove a food", (await adminJar.fetch("/api/admin/foods/" + added.id, { method: "DELETE" })).status === 200);
+}
+check("invalid food input is rejected", (await adminJar.fetch("/api/admin/foods", json({ ...foodBody, calories: -1 }))).status === 400);
 
 await adminJar.fetch("/api/auth/logout", { method: "POST" });
 check("logout ends the admin session", (await adminJar.fetch("/api/auth/me")).status === 401);

@@ -6,7 +6,7 @@ NutriTrack is a nutrition and weight tracker with three roles, each with its own
 - **Dietitian**: views assigned clients and writes recommendations.
 - **Admin**: manages accounts, roles and dietitian assignments.
 
-It runs as a Next.js application backed by **Supabase PostgreSQL**. It does not depend on Vercel and runs on any host with Node.js 20+.
+It runs as a Next.js application backed by **Supabase PostgreSQL**. It does not depend on Vercel and runs on any host with Node.js 22+.
 
 ## Quick start
 
@@ -29,13 +29,14 @@ Full database and deployment steps are in [DEPLOYMENT.md](DEPLOYMENT.md).
 - **Daily tracker** (`/dashboard`): log foods by meal, watch calories and macros against your goals, track water and weight, review history, and import data from the older browser-only tracker. A checklist guides new users through their first steps.
 - **Food catalogue** (`/foods`): search and filter by category, with per-serving details.
 - **Recommendations** (`/recommendations`): notes from your dietitian plus balanced meal ideas.
-- **Dietitian workspace** (`/dietitian`): assigned clients, their progress, and recommendations.
-- **Administration** (`/admin`): accounts, roles, enable/disable, and dietitian assignments.
+- **Dietitian workspace** (`/dietitian`): assigned clients, each client's latest day, calories trend and weight, and recommendations.
+- **Administration** (`/admin`): create accounts, change roles, enable or disable and delete accounts, reset passwords, and assign dietitians.
+- **Account settings** (`/account`): change your own password.
 
 ## Testing
 
 ```bash
-npm test                 # unit tests (no database needed)
+npm test                 # unit tests (Node 22.6+, no database needed)
 npm run smoke            # end-to-end checks against a running server; see DEPLOYMENT.md
 ```
 
@@ -43,12 +44,12 @@ npm run smoke            # end-to-end checks against a running server; see DEPLO
 
 - `src/app`: Next.js pages and API routes (auth, admin, dietitian, foods, tracker data).
 - `src/lib`: database connection, sessions and role checks.
-- `public/`: the legacy browser-first tracker (`index.html`) and the dietitian and admin workspace screens.
+- `public/`: static assets, including the legacy browser-first tracker (`index.html`) used by the tracker's data sync.
 - `src/components/`: the shared site header, which adapts to the signed-in role.
 - `db/schema.sql`: PostgreSQL schema.
 - `scripts/`: food importer and account seeding.
 - `js/foods.js`: the food catalogue imported into the database.
-- `server.py`, `tests/`: the original single-file Python/SQLite server. It is not used by the Supabase app and is kept for reference only.
+- `tests/unit/`: unit tests.
 
 ## Security
 
