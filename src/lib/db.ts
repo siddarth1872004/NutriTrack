@@ -5,12 +5,20 @@ declare global {
   var nutritrackPool: Pool | undefined;
 }
 
+function isLocalUrl(connectionString: string): boolean {
+  try {
+    return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(new URL(connectionString).hostname);
+  } catch {
+    return false;
+  }
+}
+
 function getPool(): Pool {
   if (globalThis.nutritrackPool) return globalThis.nutritrackPool;
 
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error("DATABASE_URL is missing. Add it to your Vercel Environment Variables.");
+    throw new Error("DATABASE_URL is missing. Add your PostgreSQL (Supabase) connection URI to .env.local.");
   }
 
   const pool = new Pool({
@@ -20,7 +28,8 @@ function getPool(): Pool {
     connectionTimeoutMillis: 8000,
     query_timeout: 15000,
     allowExitOnIdle: true,
-    ssl: connectionString.includes("localhost") ? undefined : { rejectUnauthorized: false },
+    // Local servers use plain TCP; hosted Postgres (for example Supabase) requires TLS.
+    ssl: isLocalUrl(connectionString) ? undefined : { rejectUnauthorized: false },
   });
 
   globalThis.nutritrackPool = pool;

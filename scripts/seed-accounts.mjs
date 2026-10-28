@@ -6,13 +6,14 @@
  */
 import bcrypt from "bcryptjs";
 import pg from "pg";
+import { poolConfig } from "./lib/pg-config.mjs";
 const {Pool}=pg,dbUrl=process.env.DATABASE_URL;
 if(!dbUrl){console.error("DATABASE_URL is required.");process.exit(1);}
 const adminName=process.env.INITIAL_ADMIN_USERNAME||"admin",adminPassword=process.env.INITIAL_ADMIN_PASSWORD;
 const dietName=process.env.INITIAL_DIETITIAN_USERNAME||"dietitian",dietPassword=process.env.INITIAL_DIETITIAN_PASSWORD;
 if(!adminPassword||adminPassword.length<12||!dietPassword||dietPassword.length<12){console.error("Set both INITIAL_ADMIN_PASSWORD and INITIAL_DIETITIAN_PASSWORD (minimum 12 characters each).");process.exit(1);}
 if(!/^[A-Za-z0-9_.-]{3,40}$/.test(adminName)||!/^[A-Za-z0-9_.-]{3,40}$/.test(dietName)||adminName===dietName){console.error("Invalid or duplicate account usernames.");process.exit(1);}
-const pool=new Pool({connectionString:dbUrl,ssl:dbUrl.includes("localhost")?undefined:{rejectUnauthorized:false},max:1});
+const pool=new Pool(poolConfig(dbUrl));
 try{
  await pool.query(await (await import("node:fs/promises")).readFile("db/schema.sql","utf8"));
  const adminHash=await bcrypt.hash(adminPassword,12),dietHash=await bcrypt.hash(dietPassword,12);

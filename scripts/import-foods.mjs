@@ -8,10 +8,11 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import pg from "pg";
+import { poolConfig } from "./lib/pg-config.mjs";
 const {Pool}=pg;
 const dbUrl=process.env.DATABASE_URL;
 if(!dbUrl){console.error("Missing DATABASE_URL environment variable.");process.exit(1);}
-const pool=new Pool({connectionString:dbUrl,ssl:dbUrl.includes("localhost")?undefined:{rejectUnauthorized:false},max:1});
+const pool=new Pool(poolConfig(dbUrl));
 try{
  const schema=await readFile(resolve("db/schema.sql"),"utf8");
  await pool.query(schema);

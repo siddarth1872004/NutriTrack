@@ -1,4 +1,5 @@
-// One canonical URL per view. Role pages are static HTML in /public served at clean URLs.
+// Role workspaces (/admin, /dietitian) are served by route handlers that check the session.
+// The legacy tracker and other static pages live in /public and are served as-is.
 const nextConfig = {
   poweredByHeader: false,
   async redirects() {
@@ -9,16 +10,8 @@ const nextConfig = {
       { source: "/auth/logout", destination: "/login", permanent: false },
     ];
   },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        { source: "/admin", destination: "/admin.html" },
-        { source: "/dietitian", destination: "/dietitian.html" },
-      ],
-    };
-  },
   async headers() {
-    return [{ source: "/(admin|dietitian|recommendations|index).html", headers: [{ key: "Cache-Control", value: "no-store" }] }];
+    return [{ source: "/(index|recommendations).html", headers: [{ key: "Cache-Control", value: "no-store" }] }];
   },
 };
 export default nextConfig;
